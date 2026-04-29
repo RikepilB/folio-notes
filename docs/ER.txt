@@ -1,0 +1,30 @@
+erDiagram
+    NOTE {
+        uuid id PK
+        varchar title
+        text content
+        boolean archived
+        boolean deleted
+        timestamp deletedAt
+        boolean isPublic
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    CATEGORY {
+        uuid id PK
+        varchar name
+    }
+    NOTE_CATEGORIES {
+        uuid note_id FK
+        uuid category_id FK
+    }
+    BOOKMARK {
+        uuid id PK
+        varchar userId
+        uuid noteId FK
+        timestamp createdAt
+    }
+
+    NOTE ||--o{ NOTE_CATEGORIES : "tagged with"
+    CATEGORY ||--o{ NOTE_CATEGORIES : "applied to"
+    NOTE ||--o{ BOOKMARK : "bookmarked by"
