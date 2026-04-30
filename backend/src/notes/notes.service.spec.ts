@@ -69,8 +69,8 @@ describe('NotesService', () => {
 
   it('findAll: delegates to repository with correct flags', async () => {
     notesRepository.findAll.mockResolvedValue([]);
-    await service.findAll(false, false, 'hello', 'cat-1');
-    expect(notesRepository.findAll).toHaveBeenCalledWith(false, false, 'hello', 'cat-1');
+    await service.findAll(false, false, 'hello', 'cat-1', 'createdAt', 'DESC');
+    expect(notesRepository.findAll).toHaveBeenCalledWith(false, false, 'hello', 'cat-1', 'createdAt', 'DESC');
   });
 
   // --- findById ---

@@ -47,6 +47,8 @@ export default function App(): React.ReactElement {
     loading,
     error,
     activeCategory,
+    sortBy,
+    sortOrder,
     createNote,
     updateNote,
     archiveNote,
@@ -55,6 +57,8 @@ export default function App(): React.ReactElement {
     hardDeleteNote,
     setSearch,
     setCategory,
+    setSortBy,
+    setSortOrder,
   } = useNotes();
 
   const handleNavigate = useCallback((route: SidebarRoute): void => {
@@ -112,6 +116,14 @@ export default function App(): React.ReactElement {
     [setCategory],
   );
 
+  const handleSortChange = useCallback(
+    (field: typeof sortBy, order: typeof sortOrder): void => {
+      setSortBy(field);
+      setSortOrder(order);
+    },
+    [setSortBy, setSortOrder],
+  );
+
   const categories = deriveCategories(notes);
   const counts = { notes: notes.length, archived: archivedNotes.length };
 
@@ -136,7 +148,7 @@ export default function App(): React.ReactElement {
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-        <TopBar onSearch={setSearch} onNewNote={handleNewNote} />
+        <TopBar onSearch={setSearch} onNewNote={handleNewNote} sortOrder={sortOrder} onSortChange={handleSortChange} />
 
         <div
           style={{

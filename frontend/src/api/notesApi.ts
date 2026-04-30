@@ -8,8 +8,10 @@ export function getNotes(
   deleted: boolean,
   search?: string,
   categoryId?: string,
+  sortBy?: string,
+  order?: string,
 ): Promise<Note[]> {
-  return api.get<Note[]>('/notes', { params: { archived, deleted, search, categoryId } }).then((r) => r.data);
+  return api.get<Note[]>('/notes', { params: { archived, deleted, search, categoryId, sortBy, order } }).then((r) => r.data);
 }
 
 export function createNote(payload: CreateNotePayload): Promise<Note> {

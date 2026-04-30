@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import type { SortField, SortOrder } from '../hooks/useNotes';
 
 interface TopBarProps {
   onSearch: (query: string) => void;
   onNewNote: () => void;
+  sortOrder: SortOrder;
+  onSortChange: (field: SortField, order: SortOrder) => void;
 }
 
 function SearchIcon(): React.ReactElement {
@@ -25,13 +28,21 @@ function SearchIcon(): React.ReactElement {
   );
 }
 
-export function TopBar({ onSearch, onNewNote }: TopBarProps): React.ReactElement {
+export function TopBar({ onSearch, onNewNote, sortOrder, onSortChange }: TopBarProps): React.ReactElement {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setQuery(e.target.value);
     onSearch(e.target.value);
+  };
+
+  const handleSortToggle = (): void => {
+    if (sortOrder === 'DESC') {
+      onSortChange('createdAt', 'ASC');
+    } else {
+      onSortChange('createdAt', 'DESC');
+    }
   };
 
   return (
@@ -106,6 +117,38 @@ export function TopBar({ onSearch, onNewNote }: TopBarProps): React.ReactElement
           }}
         />
       </div>
+
+      <button
+        onClick={handleSortToggle}
+        title={sortOrder === 'DESC' ? 'Newest first' : 'Oldest first'}
+        style={{
+          height: '30px',
+          padding: '0 10px',
+          borderRadius: '6px',
+          border: '0.5px solid var(--border)',
+          background: 'transparent',
+          color: sortOrder === 'DESC' ? 'var(--brand-violet)' : 'var(--text-muted)',
+          fontSize: 'var(--text-xs)',
+          fontFamily: 'var(--font-body)',
+          cursor: 'pointer',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          transition: 'all 150ms ease-out',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--border2)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {sortOrder === 'DESC' ? (
+            <path d="M12 5v14M19 12l-7 7-7-7" />
+          ) : (
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          )}
+        </svg>
+        {sortOrder === 'DESC' ? 'Newest' : 'Oldest'}
+      </button>
 
       <button
         onClick={onNewNote}

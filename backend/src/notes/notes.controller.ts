@@ -26,12 +26,16 @@ export class NotesController {
     @Query('deleted') deleted?: string,
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
   ): Promise<Note[]> {
     return this.notesService.findAll(
       archived === 'true',
       deleted === 'true',
       search,
       categoryId,
+      sortBy,
+      order,
     );
   }
 

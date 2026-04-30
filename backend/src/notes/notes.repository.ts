@@ -16,6 +16,8 @@ export class NotesRepository {
     deleted: boolean,
     search?: string,
     categoryId?: string,
+    sortBy?: string,
+    order?: string,
   ): Promise<Note[]> {
     const qb: SelectQueryBuilder<Note> = this.repo
       .createQueryBuilder('note')
@@ -40,7 +42,11 @@ export class NotesRepository {
       qb.andWhere('category.id = :categoryId', { categoryId });
     }
 
-    return qb.orderBy('note.updatedAt', 'DESC').getMany();
+    const validSortFields = ['createdAt', 'updatedAt'];
+    const sortField = validSortFields.includes(sortBy || '') ? sortBy : 'updatedAt';
+    const sortOrder = order?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    return qb.orderBy(`note.${sortField}`, sortOrder).getMany();
   }
 
   findById(id: string): Promise<Note | null> {

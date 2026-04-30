@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Note, Category, CreateNotePayload } from '../types';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { createCategory, getCategories } from '../api/notesApi';
 
 interface NoteFormProps {
   note?: Note | null;
@@ -87,7 +88,34 @@ export function NoteForm({ note, onClose, onSave }: NoteFormProps): React.ReactE
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await onSave({ title, content, categoryIds: categories.map((c) => c.id) });
+      const existingCategories = await getCategories();
+      const existingIds = new Set(existingCategories.map((c) => c.name.toLowerCase()));
+
+      const newCategories = categories.filter((c) => c.id.startsWith('temp-'));
+      const existingCatIds = categories
+        .filter((c) => !c.id.startsWith('temp-'))
+        .map((c) => c.id);
+
+      const createdIds: string[] = [];
+      for (const cat of newCategories) {
+        const normalizedName = cat.name.toLowerCase().trim();
+        if (!existingIds.has(normalizedName)) {
+          const created = await createCategory(cat.name.trim());
+          createdIds.push(created.id);
+          existingIds.add(normalizedName);
+        } else {
+          const existing = existingCategories.find(
+            (c) => c.name.toLowerCase() === normalizedName,
+          );
+          if (existing) createdIds.push(existing.id);
+        }
+      }
+
+      await onSave({
+        title,
+        content,
+        categoryIds: [...existingCatIds, ...createdIds],
+      });
       onClose();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to save note');

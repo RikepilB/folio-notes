@@ -10,12 +10,17 @@ import {
 } from '../api/notesApi';
 import type { Note, CreateNotePayload, UpdateNotePayload } from '../types';
 
+export type SortField = 'createdAt' | 'updatedAt';
+export type SortOrder = 'ASC' | 'DESC';
+
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [archivedNotes, setArchivedNotes] = useState<Note[]>([]);
   const [deletedNotes, setDeletedNotes] = useState<Note[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('DESC');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +34,10 @@ export function useNotes() {
           false,
           searchQuery || undefined,
           activeCategory || undefined,
+          sortBy,
+          sortOrder,
         ),
-        getNotes(true, false),
+        getNotes(true, false, undefined, undefined, sortBy, sortOrder),
         getNotes(false, true),
       ]);
       setNotes(active);
@@ -41,7 +48,7 @@ export function useNotes() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, sortBy, sortOrder]);
 
   // Keep a stable ref to fetchNotes so the initial-mount effect can call the
   // latest version without listing it as a dependency (avoids an infinite loop
@@ -132,6 +139,8 @@ export function useNotes() {
     deletedNotes,
     searchQuery,
     activeCategory,
+    sortBy,
+    sortOrder,
     loading,
     error,
     fetchNotes,
@@ -143,5 +152,7 @@ export function useNotes() {
     hardDeleteNote,
     setSearch,
     setCategory,
+    setSortBy,
+    setSortOrder,
   };
 }

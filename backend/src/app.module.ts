@@ -4,7 +4,6 @@ import { NotesModule } from './notes/notes.module';
 import { CategoriesModule } from './categories/categories.module';
 import { Note } from './notes/note.entity';
 import { Category } from './categories/category.entity';
-import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -20,7 +19,6 @@ import { SeedModule } from './seed/seed.module';
     }),
     NotesModule,
     CategoriesModule,
-    SeedModule,
   ],
 })
 export class AppModule {}

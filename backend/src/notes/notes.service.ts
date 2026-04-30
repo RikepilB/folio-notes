@@ -22,8 +22,10 @@ export class NotesService {
     deleted: boolean,
     search?: string,
     categoryId?: string,
+    sortBy?: string,
+    order?: string,
   ): Promise<Note[]> {
-    return this.notesRepository.findAll(archived, deleted, search, categoryId);
+    return this.notesRepository.findAll(archived, deleted, search, categoryId, sortBy, order);
   }
 
   async findById(id: string): Promise<Note> {
