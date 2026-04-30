@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build output
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (keep .env.example)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+*.lcov
+
+# Playwright
+playwright-report/
+test-results/
+*.playwright/
+
+# Docker
+*.pid
+
+# Misc
+*.tgz
+.cache/
+
+# Claude Code / AI config (local only)
+.claude/
+.playwright-mcp/
+skills-lock.json
+claude.md
+
+# Windows NUL device artifacts
+nul
+backend/nul
+frontend/nul
+frontend/void,+
+
+# Screenshots
+*.png

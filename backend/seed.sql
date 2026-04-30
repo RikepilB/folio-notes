@@ -1,0 +1,15 @@
+-- Seed data for Folio notes app
+INSERT INTO note (id, title, content, archived, deleted, "isPublic", "createdAt", "updatedAt")
+VALUES 
+  (gen_random_uuid(), 'Design System v2 — Color Palette', 'The new palette uses warm amber as the primary brand color (#F8612D) paired with a deep violet for interactive elements. Typography defaults to Lora for display text and DM Sans for body copy.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Q2 OKRs — Planning Session', 'Objective 1: Launch Folio to 500 beta users by end of Q2. Key results: KR1 — landing page with waitlist; KR2 — core CRUD with categories; KR3 — Clerk auth; KR4 — Azure deploy.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'API Architecture — Three-Tier Pattern', 'Controllers handle HTTP only. Services contain business logic and NestJS exceptions. Repositories interact with TypeORM exclusively. This makes testing straightforward.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Typography Scale Reference', 'Font sizes: xs=12px, sm=14px, base=16px, md=18px, lg=20px, xl=24px, 2xl=28px, 3xl=36px, 4xl=48px. Line heights: tight (1.2) for headings, relaxed (1.6) for body.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Feature Flags with Unleash', 'Self-host on Azure Container Apps. New features gate behind flags. All flags default to false until explicitly enabled per environment.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Brand Voice and Tone', 'Folio speaks in a calm, confident voice. We write short sentences with strong verbs. Active voice throughout. Avoid corporate buzzwords. Our tone is warm.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Accessibility Audit Checklist', 'Tab-navigable, focus indicators, alt text, color contrast >=4.5:1, aria-live errors, modal focus trap, prefers-reduced-motion.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Competitor Analysis', 'Bear: good markdown, poor categories. Notion: flexible but heavy. Craft: Mac-only. Our gap: fast, category-first, elegant UI, clean API.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Database Migration Plan', 'Phase 1: notes + categories. Phase 2: users, is_public, share_tokens. Use TypeORM migrations. Never use synchronize in production.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Folio Roadmap — H1 2026', 'Phase 1 (now): CRUD, categories, search, archive, trash. Phase 2 (April): Clerk, multi-user, share links. Phase 3 (May): collaboration, reactions, export.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Animation Principles', '150ms ease-out. Entrances: fade + translate-y from 4px below. Exits: fade + translate-y to 4px below. Stagger list items by 50ms.', false, false, false, NOW(), NOW()),
+  (gen_random_uuid(), 'Post-Launch Monitoring', 'Instrument with Azure Application Insights. Track: page views, note creation rate, API p50/p95/p99, frontend error rate. Set alert thresholds.', false, false, false, NOW(), NOW());
