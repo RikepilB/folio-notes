@@ -2,12 +2,14 @@
 
 A production-ready, type-safe notes application with category organization, archive, and trash functionality.
 
+**Live demo**: https://frontend-rouge-kappa-88.vercel.app
+
 ## Overview
 
 Folio is a full-stack notes application built with modern, production-ready technologies:
-- **Backend**: NestJS 10 + TypeORM 0.3 + PostgreSQL 16
+- **Backend**: Supabase Edge Functions (Deno runtime) + PostgreSQL 16
 - **Frontend**: React 18 + Vite 5 + Tailwind CSS 3.4
-- **Language**: TypeScript 5.x (strict mode on both layers)
+- **Language**: TypeScript 5.x (strict mode throughout)
 - **Testing**: Vitest (unit) + Playwright (E2E)
 
 ## Requirements
@@ -20,7 +22,6 @@ Folio is a full-stack notes application built with modern, production-ready tech
 | npm | 10.x or 11.x | Package management |
 | Docker | 29.x | Container runtime |
 | Docker Compose | 2.x | Multi-container orchestration |
-| PostgreSQL | 16.x | Database (via Docker) |
 
 ### Detailed Version Information
 
@@ -42,16 +43,6 @@ $ docker compose version
 Docker Compose version v2.30.3
 ```
 
-**Backend Dependencies:**
-- @nestjs/common: ^10.0.0
-- @nestjs/core: ^10.0.0
-- @nestjs/platform-express: ^10.0.0
-- @nestjs/typeorm: ^10.0.0
-- typeorm: ^0.3.17
-- pg: ^8.11.0
-- class-validator: ^0.14.0
-- class-transformer: ^0.5.1
-
 **Frontend Dependencies:**
 - react: ^18.2.0
 - react-dom: ^18.2.0
@@ -66,6 +57,12 @@ Docker Compose version v2.30.3
 
 ## Quick Start
 
+### Use the live app
+
+Visit **https://frontend-rouge-kappa-88.vercel.app** — no setup required.
+
+### Run locally
+
 ```bash
 # Clone the repository
 git clone https://github.com/hirelens-challenges/Pillaca-52a4e1.git
@@ -77,14 +74,18 @@ cd Pillaca-52a4e1
 
 The `start.sh` script will:
 1. Create `.env` files from `.env.example` templates
-2. Build and start all Docker containers (postgres, backend, frontend)
-3. Initialize the PostgreSQL schema (via TypeORM synchronize)
+2. Build and start all Docker containers (postgres, frontend)
+3. Initialize the PostgreSQL schema
 4. Seed sample data (12 notes, 4 categories)
 
-**Access Points:**
+**Local access points:**
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3000
 - **API Documentation**: See endpoint tables below
+
+**Production access points:**
+- **Frontend**: https://frontend-rouge-kappa-88.vercel.app
+- **Backend API**: `https://ffitssrosgkrzgjozscc.supabase.co/functions/v1/notes-api`
 
 ## How to Use
 
@@ -160,18 +161,10 @@ Type in the search bar at the top to filter notes by title or content (case-inse
 
 ```
 folio/
-├── backend/               # NestJS API
-│   ├── src/
-│   │   ├── notes/        # Notes module
-│   │   │   ├── notes.controller.ts   # HTTP handlers
-│   │   │   ├── notes.service.ts      # Business logic
-│   │   │   ├── notes.repository.ts   # Data access
-│   │   │   ├── note.entity.ts        # TypeORM entity
-│   │   │   └── dto/                  # Validation DTOs
-│   │   ├── categories/              # Categories module
-│   │   └── main.ts                   # App entry point
-│   ├── package.json
-│   └── Dockerfile
+├── supabase/
+│   └── functions/
+│       └── notes-api/
+│           └── index.ts          # Deno Edge Function (all backend logic)
 │
 ├── frontend/              # React SPA
 │   ├── src/
@@ -184,28 +177,18 @@ folio/
 │   │   │   ├── TopBar.tsx        # Search + actions
 │   │   │   ├── Sidebar.tsx       # Navigation
 │   │   │   └── DeleteConfirm.tsx # Delete modal
-│   │   ├── api/           # Axios client
+│   │   ├── api/           # Axios client (notesApi.ts)
 │   │   ├── hooks/         # Custom hooks (useNotes.ts)
 │   │   ├── types/         # TypeScript interfaces
 │   │   └── utils/         # Utilities
 │   ├── package.json
-│   ├── vite.config.ts
-│   ├── tailwind.config.ts
-│   └── Dockerfile
+│   └── vite.config.ts
 │
-├── docker-compose.yml     # Container orchestration
-├── start.sh              # One-command startup
+├── docker-compose.yml     # Local development containers
 └── README.md
 ```
 
 ## Testing
-
-### Unit Tests (Backend)
-
-```bash
-cd backend
-npm test
-```
 
 ### Unit Tests (Frontend)
 
@@ -226,10 +209,6 @@ npm run test:e2e
 ### Type Checking
 
 ```bash
-# Backend
-cd backend && npm run build
-
-# Frontend
 cd frontend && npm run lint
 ```
 
@@ -250,88 +229,15 @@ cd frontend && npm run lint
 - ✅ Filter notes by category
 - ✅ Sort notes by creation date (asc/desc)
 
-## Environment Configuration
-
-### Root .env
-```
-DB_NAME=folio
-DB_USER=folio
-DB_PASS=folio
-DB_PORT=5432
-PORT=3000
-VITE_API_URL=http://localhost:3000
-FRONTEND_URL=http://localhost:5173
-```
-
-### Backend .env
-```
-NODE_ENV=development
-PORT=3000
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=folio
-DB_USER=folio
-DB_PASS=folio
-FRONTEND_URL=http://localhost:5173
-```
-
-## Manual Setup (Without Docker)
-
-### Backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Edit .env with your PostgreSQL credentials
-npm run start:dev
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## Troubleshooting
-
-### Port Already in Use
-
-```bash
-docker compose down
-```
-
-### Database Connection Failed
-
-```bash
-docker compose logs postgres
-```
-
-### Frontend Shows Network Error
-
-Ensure the backend is running:
-```bash
-docker compose logs backend
-```
-
-### Reset Database
-
-```bash
-docker compose down -v  # Remove volumes
-docker compose up -d     # Fresh start
-```
-
 ## Architecture
 
-**Three-tier architecture:**
-- **Controller**: HTTP only, delegates to service
-- **Service**: Business logic, throws domain exceptions (NotFoundException, BadRequestException)
-- **Repository**: All TypeORM/DB access
+**Production deployment:**
+- **Frontend**: React SPA deployed on Vercel (auto-built from `frontend/`)
+- **Backend**: Single Deno Edge Function (`notes-api`) deployed on Supabase — handles all REST routes via path + method matching
+- **Database**: Supabase PostgreSQL — tables: `notes`, `categories`, `note_categories`
 
-**Soft delete rule:** Use `repo.save({ deleted: true, deletedAt: new Date() })` — never `repo.delete()`.
+**Soft delete rule:** Notes are soft-deleted (`deleted: true, deleted_at: timestamp`). Hard deletion only happens from the trash view or via the permanent-delete endpoint.
 
 ---
 
-Built with NestJS 10, React 18, TypeScript, Docker, PostgreSQL
+Built with React 18, Supabase Edge Functions (Deno), PostgreSQL 16, Vite 5, Tailwind CSS 3.4, TypeScript 5.x

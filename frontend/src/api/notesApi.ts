@@ -1,15 +1,9 @@
 import axios from 'axios';
 import type { Note, Category, CreateNotePayload, UpdateNotePayload } from '../types';
 
-const SUPABASE_URL = 'https://ffitssrosgkrzgjozscc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXRzc3Jvc2drcmpoem96c2MiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0Mzg2MTcwMywiZXhwIjoxOTU5MjM3NzAzfQ.2fi-iABtHkR4pVhJGO0r-h-c1D0f7gZ1zL8kB2qJ1w';
-
 const api = axios.create({
-  baseURL: `${SUPABASE_URL}/functions/v1/notes-api`,
-  headers: {
-    'Content-Type': 'application/json',
-    'apikey': SUPABASE_ANON_KEY,
-  },
+  baseURL: 'https://ffitssrosgkrzgjozscc.supabase.co/functions/v1/notes-api',
+  headers: { 'Content-Type': 'application/json' },
 });
 
 export function getNotes(
