@@ -1,34 +1,16 @@
-# Dependencies
 node_modules/
-.pnp
-.pnp.js
-
-# Build outputs
-dist/
-build/
-*.js.map
-
-# Environment files
 .env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-
-# Coverage
-coverage/
-
-# Private files
+dist/
 DEVLOG.md
 claude.md
 .claude/
+*.log
+postgres_data/
+.playwright-mcp/
+skills-lock.json
+NOW()
+nul
+void,+
+backend/nul
+frontend/nul
+frontend/void,+

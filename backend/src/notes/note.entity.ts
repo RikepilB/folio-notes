@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
 
-@Entity('notes')
+@Entity('note')
 export class Note {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -32,17 +32,16 @@ export class Note {
   @Column({ default: false })
   isPublic!: boolean;
 
+  @ManyToMany(() => Category, (category) => category.notes, {
+    eager: true,
+    cascade: true,
+  })
+  @JoinTable({ name: 'note_categories' })
+  categories!: Category[];
+
   @CreateDateColumn()
   createdAt!: Date;
 
   @UpdateDateColumn()
   updatedAt!: Date;
-
-  @ManyToMany(() => Category, { eager: true })
-  @JoinTable({
-    name: 'note_categories',
-    joinColumn: { name: 'note_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
-  })
-  categories!: Category[];
 }

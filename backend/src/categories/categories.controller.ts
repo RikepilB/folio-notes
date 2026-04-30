@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
+  Param,
   Body,
   HttpCode,
   HttpStatus,
@@ -23,5 +25,11 @@ export class CategoriesController {
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateCategoryDto): Promise<Category> {
     return this.categoriesService.create(dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id') id: string): Promise<void> {
+    await this.categoriesService.delete(id);
   }
 }

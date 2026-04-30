@@ -26,13 +26,22 @@ export class NotesController {
     @Query('deleted') deleted?: string,
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
   ): Promise<Note[]> {
-    return this.notesService.findAll({
-      archived: archived !== undefined ? archived === 'true' : undefined,
-      deleted: deleted !== undefined ? deleted === 'true' : false,
+    return this.notesService.findAll(
+      archived === 'true',
+      deleted === 'true',
       search,
       categoryId,
-    });
+      sortBy,
+      order,
+    );
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Note> {
+    return this.notesService.findById(id);
   }
 
   @Post()
@@ -49,6 +58,12 @@ export class NotesController {
   @Patch(':id/archive')
   toggleArchive(@Param('id') id: string): Promise<Note> {
     return this.notesService.toggleArchive(id);
+  }
+
+  @Delete('trash')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async emptyTrash(): Promise<void> {
+    await this.notesService.emptyTrash();
   }
 
   @Delete(':id')

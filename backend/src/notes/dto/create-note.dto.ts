@@ -3,9 +3,8 @@ import {
   IsNotEmpty,
   MaxLength,
   IsOptional,
-  IsBoolean,
-  IsUUID,
   IsArray,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateNoteDto {
@@ -17,10 +16,6 @@ export class CreateNoteDto {
   @IsString()
   @IsNotEmpty()
   content!: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isPublic?: boolean;
 
   @IsOptional()
   @IsArray()
