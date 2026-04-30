@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { Note } from '../types';
 import { relativeTime } from '../utils/relativeTime';
 
@@ -13,6 +13,16 @@ function truncate(text: string): string {
   return text.length > 120 ? `${text.slice(0, 120)}…` : text;
 }
 
+const cardStyle: React.CSSProperties = {
+  background: 'var(--surface)',
+  borderRadius: '12px',
+  padding: '16px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  transition: 'border-color 150ms ease-out, transform 150ms ease-out, box-shadow 150ms ease-out',
+};
+
 const baseBtn: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -24,7 +34,7 @@ const baseBtn: React.CSSProperties = {
   fontSize: 'var(--text-xs)',
   fontFamily: 'var(--font-body)',
   cursor: 'pointer',
-  transition: 'color 150ms ease-out, border-color 150ms ease-out',
+  transition: 'color 150ms ease-out, border-color 150ms ease-out, background 150ms ease-out',
 };
 
 export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): React.ReactElement {
@@ -41,14 +51,15 @@ export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): Re
       onMouseLeave={() => { setCardHovered(false); setHoveredBtn(null); }}
       style={{
         background: 'var(--surface)',
-        border: `0.5px solid ${cardHovered ? 'var(--border2)' : 'var(--border)'}`,
-        borderRadius: '10px',
-        padding: '14px',
+        border: `1px solid ${cardHovered ? 'var(--border2)' : 'var(--border)'}`,
+        borderRadius: '12px',
+        padding: '16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px',
+        gap: '10px',
         opacity: note.archived ? 0.65 : 1,
-        transition: 'border-color 150ms ease-out',
+        transition: 'border-color 150ms ease-out, box-shadow 150ms ease-out',
+        boxShadow: cardHovered ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
       }}
     >
       {/* Category pills */}
