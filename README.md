@@ -2,7 +2,7 @@
 
 A production-ready, type-safe notes application with category organization, archive, and trash functionality.
 
-**Live demo**: https://frontend-rouge-kappa-88.vercel.app
+**Live demo**: [https://frontend-rouge-kappa-88.vercel.app](https://folio-notes-lake.vercel.app/)
 
 ## Overview
 
