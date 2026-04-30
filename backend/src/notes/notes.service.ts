@@ -87,6 +87,10 @@ export class NotesService {
     return this.notesRepository.hardDelete(id);
   }
 
+  emptyTrash(): Promise<void> {
+    return this.notesRepository.emptyTrash();
+  }
+
   async addCategory(noteId: string, categoryId: string): Promise<Note> {
     const note = await this.findById(noteId);
     const category = await this.categoriesService.findOne(categoryId);

@@ -23,6 +23,12 @@ export class NotesRepository {
       .where('note.archived = :archived', { archived })
       .andWhere('note.deleted = :deleted', { deleted });
 
+    if (deleted) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      qb.andWhere('note.deletedAt > :cutoff', { cutoff });
+    }
+
     if (search) {
       qb.andWhere(
         '(note.title ILIKE :search OR note.content ILIKE :search)',
@@ -59,6 +65,10 @@ export class NotesRepository {
 
   async hardDelete(id: string): Promise<void> {
     await this.repo.delete(id);
+  }
+
+  async emptyTrash(): Promise<void> {
+    await this.repo.delete({ deleted: true });
   }
 
   addCategory(note: Note, category: Category): Promise<Note> {

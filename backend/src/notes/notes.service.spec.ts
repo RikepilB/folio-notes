@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { NotesRepository } from './notes.repository';
 import { CategoriesService } from '../categories/categories.service';
 import { Note } from './note.entity';
+import { Category } from '../categories/category.entity';
 
 const mockNote = (overrides: Partial<Note> = {}): Note =>
   ({
@@ -20,9 +21,13 @@ const mockNote = (overrides: Partial<Note> = {}): Note =>
     ...overrides,
   } as Note);
 
+const mockCategory = (overrides: Partial<Category> = {}): Category =>
+  ({ id: 'cat-1', name: 'Work', color: '#ff0000', notes: [], ...overrides } as Category);
+
 describe('NotesService', () => {
   let service: NotesService;
   let notesRepository: jest.Mocked<NotesRepository>;
+  let categoriesService: jest.Mocked<CategoriesService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,6 +43,7 @@ describe('NotesService', () => {
             restore: jest.fn(),
             toggleArchive: jest.fn(),
             hardDelete: jest.fn(),
+            emptyTrash: jest.fn(),
             addCategory: jest.fn(),
             removeCategory: jest.fn(),
           },
@@ -56,7 +62,32 @@ describe('NotesService', () => {
 
     service = module.get<NotesService>(NotesService);
     notesRepository = module.get(NotesRepository);
+    categoriesService = module.get(CategoriesService);
   });
+
+  // --- findAll ---
+
+  it('findAll: delegates to repository with correct flags', async () => {
+    notesRepository.findAll.mockResolvedValue([]);
+    await service.findAll(false, false, 'hello', 'cat-1');
+    expect(notesRepository.findAll).toHaveBeenCalledWith(false, false, 'hello', 'cat-1');
+  });
+
+  // --- findById ---
+
+  it('findById: throws NotFoundException when note missing', async () => {
+    notesRepository.findById.mockResolvedValue(null);
+    await expect(service.findById('missing')).rejects.toThrow(NotFoundException);
+  });
+
+  it('findById: returns note when found', async () => {
+    const note = mockNote();
+    notesRepository.findById.mockResolvedValue(note);
+    const result = await service.findById('uuid-1');
+    expect(result).toBe(note);
+  });
+
+  // --- create ---
 
   it('create: sets archived=false', async () => {
     const saved = mockNote({ archived: false });
@@ -69,6 +100,42 @@ describe('NotesService', () => {
     );
     expect(result.archived).toBe(false);
   });
+
+  it('create: resolves categoryIds when provided', async () => {
+    const cat = mockCategory();
+    categoriesService.findByIds.mockResolvedValue([cat]);
+    notesRepository.save.mockResolvedValue(mockNote({ categories: [cat] }));
+
+    await service.create({ title: 'T', content: 'C', categoryIds: ['cat-1'] });
+
+    expect(categoriesService.findByIds).toHaveBeenCalledWith(['cat-1']);
+    expect(notesRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ categories: [cat] }),
+    );
+  });
+
+  // --- update ---
+
+  it('update: merges dto fields onto existing note', async () => {
+    const note = mockNote();
+    const updated = mockNote({ title: 'New Title' });
+    notesRepository.findById.mockResolvedValue(note);
+    notesRepository.save.mockResolvedValue(updated);
+
+    const result = await service.update('uuid-1', { title: 'New Title' });
+
+    expect(notesRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'New Title' }),
+    );
+    expect(result.title).toBe('New Title');
+  });
+
+  it('update: throws NotFoundException when note missing', async () => {
+    notesRepository.findById.mockResolvedValue(null);
+    await expect(service.update('missing', { title: 'X' })).rejects.toThrow(NotFoundException);
+  });
+
+  // --- toggleArchive ---
 
   it('toggleArchive: flips false to true', async () => {
     const note = mockNote({ archived: false });
@@ -90,6 +157,8 @@ describe('NotesService', () => {
     expect(result.archived).toBe(false);
   });
 
+  // --- softDelete ---
+
   it('softDelete: throws NotFoundException when note not found', async () => {
     notesRepository.findById.mockResolvedValue(null);
     await expect(service.softDelete('missing-id')).rejects.toThrow(NotFoundException);
@@ -106,6 +175,8 @@ describe('NotesService', () => {
     expect(notesRepository.hardDelete).not.toHaveBeenCalled();
   });
 
+  // --- restore ---
+
   it('restore: sets deleted=false deletedAt=null', async () => {
     const deleted = mockNote({ deleted: true, deletedAt: new Date() });
     const restored = mockNote({ deleted: false, deletedAt: null });
@@ -116,5 +187,85 @@ describe('NotesService', () => {
 
     expect(result.deleted).toBe(false);
     expect(result.deletedAt).toBeNull();
+  });
+
+  it('restore: throws BadRequestException when note is not in trash', async () => {
+    notesRepository.findById.mockResolvedValue(mockNote({ deleted: false }));
+    await expect(service.restore('uuid-1')).rejects.toThrow(BadRequestException);
+  });
+
+  // --- hardDelete ---
+
+  it('hardDelete: calls repo.hardDelete when note is in trash', async () => {
+    const deleted = mockNote({ deleted: true });
+    notesRepository.findById.mockResolvedValue(deleted);
+    notesRepository.hardDelete.mockResolvedValue(undefined);
+
+    await service.hardDelete('uuid-1');
+
+    expect(notesRepository.hardDelete).toHaveBeenCalledWith('uuid-1');
+  });
+
+  it('hardDelete: throws BadRequestException when note is not in trash', async () => {
+    notesRepository.findById.mockResolvedValue(mockNote({ deleted: false }));
+    await expect(service.hardDelete('uuid-1')).rejects.toThrow(BadRequestException);
+  });
+
+  // --- emptyTrash ---
+
+  it('emptyTrash: delegates to repository', async () => {
+    notesRepository.emptyTrash.mockResolvedValue(undefined);
+    await service.emptyTrash();
+    expect(notesRepository.emptyTrash).toHaveBeenCalledTimes(1);
+  });
+
+  // --- addCategory ---
+
+  it('addCategory: attaches category to note', async () => {
+    const note = mockNote();
+    const cat = mockCategory();
+    const updated = mockNote({ categories: [cat] });
+    notesRepository.findById.mockResolvedValue(note);
+    categoriesService.findOne.mockResolvedValue(cat);
+    notesRepository.save.mockResolvedValue(updated);
+
+    const result = await service.addCategory('uuid-1', 'cat-1');
+
+    expect(result.categories).toContain(cat);
+  });
+
+  it('addCategory: throws NotFoundException when category missing', async () => {
+    notesRepository.findById.mockResolvedValue(mockNote());
+    categoriesService.findOne.mockResolvedValue(null);
+    await expect(service.addCategory('uuid-1', 'cat-missing')).rejects.toThrow(NotFoundException);
+  });
+
+  it('addCategory: returns note unchanged when category already attached', async () => {
+    const cat = mockCategory();
+    const note = mockNote({ categories: [cat] });
+    notesRepository.findById.mockResolvedValue(note);
+    categoriesService.findOne.mockResolvedValue(cat);
+
+    const result = await service.addCategory('uuid-1', 'cat-1');
+
+    expect(notesRepository.save).not.toHaveBeenCalled();
+    expect(result).toBe(note);
+  });
+
+  // --- removeCategory ---
+
+  it('removeCategory: strips category from note', async () => {
+    const cat = mockCategory();
+    const note = mockNote({ categories: [cat] });
+    const updated = mockNote({ categories: [] });
+    notesRepository.findById.mockResolvedValue(note);
+    notesRepository.save.mockResolvedValue(updated);
+
+    const result = await service.removeCategory('uuid-1', 'cat-1');
+
+    expect(notesRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ categories: [] }),
+    );
+    expect(result.categories).toHaveLength(0);
   });
 });

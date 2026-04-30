@@ -56,6 +56,12 @@ export class NotesController {
     return this.notesService.toggleArchive(id);
   }
 
+  @Delete('trash')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async emptyTrash(): Promise<void> {
+    await this.notesService.emptyTrash();
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async softDelete(@Param('id') id: string): Promise<void> {
