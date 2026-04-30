@@ -1,31 +1,21 @@
 import React from 'react';
 
 interface TopBarProps {
-  search: string;
-  onSearchChange: (value: string) => void;
-  onNewNote: () => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
 }
 
-export function TopBar({
-  search,
-  onSearchChange,
-  onNewNote,
-}: TopBarProps): React.ReactElement {
+export function TopBar({ searchQuery, onSearchChange }: TopBarProps): React.ReactElement {
   return (
-    <header className="flex items-center gap-4 px-6 py-3 border-b border-[var(--border)] bg-[var(--surf2)]">
+    <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+      <span className="text-lg font-semibold text-white">Folio</span>
       <input
-        type="text"
-        placeholder="Search notes…"
-        value={search}
-        onChange={e => onSearchChange(e.target.value)}
-        className="flex-1 max-w-sm rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-violet)]"
+        type="search"
+        placeholder="Search notes..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="rounded border border-[var(--border)] bg-[var(--surf2)] px-3 py-1.5 text-sm text-white placeholder-[var(--text-muted)] focus:border-[var(--brand-orange)] focus:outline-none transition-colors duration-150 ease-out"
       />
-      <button
-        onClick={onNewNote}
-        className="px-4 py-2 rounded bg-[var(--brand-orange)] text-white text-sm font-medium hover:opacity-90"
-      >
-        + New Note
-      </button>
-    </header>
+    </div>
   );
 }

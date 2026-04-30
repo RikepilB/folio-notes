@@ -9,40 +9,39 @@ import {
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
 
-@Entity('notes')
+@Entity('note')
 export class Note {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'text' })
-  content: string;
+  content!: string;
 
   @Column({ default: false })
-  archived: boolean;
+  archived!: boolean;
 
   @Column({ default: false })
-  deleted: boolean;
+  deleted!: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
-  deletedAt: Date | null;
+  deletedAt!: Date | null;
 
   @Column({ default: false })
-  isPublic: boolean;
+  isPublic!: boolean;
+
+  @ManyToMany(() => Category, (category) => category.notes, {
+    eager: true,
+    cascade: true,
+  })
+  @JoinTable({ name: 'note_categories' })
+  categories!: Category[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
-
-  @ManyToMany(() => Category, { eager: true })
-  @JoinTable({
-    name: 'note_categories',
-    joinColumn: { name: 'note_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
-  })
-  categories: Category[];
+  updatedAt!: Date;
 }

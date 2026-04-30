@@ -4,43 +4,36 @@ import { NoteCard } from './NoteCard';
 
 interface NoteListProps {
   notes: Note[];
-  loading: boolean;
-  error: string | null;
   onEdit: (note: Note) => void;
-  onDelete: (id: string) => void;
-  onToggleArchive: (id: string) => void;
+  onArchive: (id: string) => void;
+  onDelete: (note: Note) => void;
+  emptyMessage: string;
 }
 
 export function NoteList({
   notes,
-  loading,
-  error,
   onEdit,
+  onArchive,
   onDelete,
-  onToggleArchive,
+  emptyMessage,
 }: NoteListProps): React.ReactElement {
-  if (loading) {
-    return (
-      <p className="text-[var(--text-muted)] text-center py-8">Loading notes…</p>
-    );
-  }
-  if (error) {
-    return <p className="text-red-400 text-center py-8">{error}</p>;
-  }
   if (notes.length === 0) {
     return (
-      <p className="text-[var(--text-muted)] text-center py-8">No notes found.</p>
+      <div className="flex items-center justify-center py-16">
+        <p className="text-[var(--text-muted)]">{emptyMessage}</p>
+      </div>
     );
   }
+
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {notes.map(note => (
+      {notes.map((note) => (
         <NoteCard
           key={note.id}
           note={note}
           onEdit={onEdit}
+          onArchive={onArchive}
           onDelete={onDelete}
-          onToggleArchive={onToggleArchive}
         />
       ))}
     </div>

@@ -3,35 +3,37 @@ import type { Category } from '../types';
 
 interface CategoryFilterProps {
   categories: Category[];
-  selectedId: string | undefined;
-  onSelect: (id: string | undefined) => void;
+  activeCategory: string | null;
+  onSelect: (id: string | null) => void;
 }
 
 export function CategoryFilter({
   categories,
-  selectedId,
+  activeCategory,
   onSelect,
 }: CategoryFilterProps): React.ReactElement {
   return (
     <div className="flex flex-wrap gap-2">
       <button
-        onClick={() => onSelect(undefined)}
-        className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-          selectedId === undefined
-            ? 'bg-[var(--brand-violet)] border-[var(--brand-violet)] text-white'
-            : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-violet)]'
+        aria-pressed={activeCategory === null}
+        onClick={() => onSelect(null)}
+        className={`rounded-full text-sm px-3 py-1 border transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-orange)] ${
+          activeCategory === null
+            ? 'bg-[var(--brand-orange)] border-[var(--brand-orange)] text-white'
+            : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-orange)]'
         }`}
       >
         All
       </button>
-      {categories.map(cat => (
+      {categories.map((cat) => (
         <button
           key={cat.id}
+          aria-pressed={activeCategory === cat.id}
           onClick={() => onSelect(cat.id)}
-          className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-            selectedId === cat.id
-              ? 'bg-[var(--brand-violet)] border-[var(--brand-violet)] text-white'
-              : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-violet)]'
+          className={`rounded-full text-sm px-3 py-1 border transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-orange)] ${
+            activeCategory === cat.id
+              ? 'bg-[var(--brand-orange)] border-[var(--brand-orange)] text-white'
+              : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-orange)]'
           }`}
         >
           {cat.name}

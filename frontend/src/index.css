@@ -7,11 +7,12 @@
   --brand-violet: #5F44C5;
   --brand-violet-light: #BB5BFF;
   --brand-violet-dark: #3E1544;
+  --brand-black: #020102;
   --surface: #111010;
   --surf2: #1A1820;
+  --text-muted: #7A7974;
   --border: #2A2830;
   --border2: #3A3648;
-  --text-muted: #7A7974;
 }
 
 *,
@@ -22,7 +23,7 @@
 
 body {
   margin: 0;
-  background-color: var(--surface);
+  background-color: var(--brand-black);
   color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }

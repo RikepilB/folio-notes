@@ -1,6 +1,6 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Category } from './category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 
@@ -15,8 +15,13 @@ export class CategoriesService {
     return this.repo.find();
   }
 
-  findById(id: string): Promise<Category | null> {
+  findOne(id: string): Promise<Category | null> {
     return this.repo.findOne({ where: { id } });
+  }
+
+  findByIds(ids: string[]): Promise<Category[]> {
+    if (!ids.length) return Promise.resolve([]);
+    return this.repo.findBy({ id: In(ids) });
   }
 
   async create(dto: CreateCategoryDto): Promise<Category> {
@@ -24,7 +29,10 @@ export class CategoriesService {
     if (existing) {
       throw new ConflictException(`Category "${dto.name}" already exists`);
     }
-    const category = this.repo.create({ name: dto.name });
-    return this.repo.save(category);
+    return this.repo.save(this.repo.create({ name: dto.name }));
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.repo.delete(id);
   }
 }

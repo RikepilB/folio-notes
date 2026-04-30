@@ -27,12 +27,17 @@ export class NotesController {
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
   ): Promise<Note[]> {
-    return this.notesService.findAll({
-      archived: archived !== undefined ? archived === 'true' : undefined,
-      deleted: deleted !== undefined ? deleted === 'true' : false,
+    return this.notesService.findAll(
+      archived === 'true',
+      deleted === 'true',
       search,
       categoryId,
-    });
+    );
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Note> {
+    return this.notesService.findById(id);
   }
 
   @Post()

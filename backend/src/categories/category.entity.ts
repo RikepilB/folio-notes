@@ -1,10 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import { Note } from '../notes/note.entity';
 
-@Entity('categories')
+@Entity('category')
 export class Category {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', length: 100, unique: true })
-  name: string;
+  name!: string;
+
+  @ManyToMany(() => Note, (note) => note.categories)
+  notes!: Note[];
 }

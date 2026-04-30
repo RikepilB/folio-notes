@@ -3,7 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { NotesRepository, FindNotesOptions } from './notes.repository';
+import { NotesRepository } from './notes.repository';
 import { CategoriesService } from '../categories/categories.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
@@ -17,8 +17,13 @@ export class NotesService {
     private readonly categoriesService: CategoriesService,
   ) {}
 
-  findAll(options: FindNotesOptions): Promise<Note[]> {
-    return this.notesRepository.findAll(options);
+  findAll(
+    archived: boolean,
+    deleted: boolean,
+    search?: string,
+    categoryId?: string,
+  ): Promise<Note[]> {
+    return this.notesRepository.findAll(archived, deleted, search, categoryId);
   }
 
   async findById(id: string): Promise<Note> {
@@ -27,26 +32,40 @@ export class NotesService {
     return note;
   }
 
-  private async resolveCategories(ids: string[]): Promise<Category[]> {
-    const results = await Promise.all(
-      ids.map(id => this.categoriesService.findById(id)),
-    );
-    return results.filter((c): c is Category => c !== null);
+  private resolveCategories(ids: string[]): Promise<Category[]> {
+    return this.categoriesService.findByIds(ids);
   }
 
   async create(dto: CreateNoteDto): Promise<Note> {
     const categories = dto.categoryIds
       ? await this.resolveCategories(dto.categoryIds)
       : [];
-    return this.notesRepository.create(dto, categories);
+    return this.notesRepository.save({
+      title: dto.title,
+      content: dto.content,
+      archived: false,
+      deleted: false,
+      isPublic: false,
+      categories,
+    });
   }
 
   async update(id: string, dto: UpdateNoteDto): Promise<Note> {
     const note = await this.findById(id);
     const categories = dto.categoryIds
       ? await this.resolveCategories(dto.categoryIds)
-      : undefined;
-    return this.notesRepository.update(note, dto, categories);
+      : note.categories;
+    return this.notesRepository.save({
+      ...note,
+      ...(dto.title !== undefined && { title: dto.title }),
+      ...(dto.content !== undefined && { content: dto.content }),
+      categories,
+    });
+  }
+
+  async toggleArchive(id: string): Promise<Note> {
+    const note = await this.findById(id);
+    return this.notesRepository.toggleArchive(note);
   }
 
   async softDelete(id: string): Promise<Note> {
@@ -56,34 +75,34 @@ export class NotesService {
 
   async restore(id: string): Promise<Note> {
     const note = await this.findById(id);
-    if (!note.deleted) {
-      throw new BadRequestException('Note is not in trash');
-    }
+    if (!note.deleted) throw new BadRequestException('Note is not in trash');
     return this.notesRepository.restore(note);
-  }
-
-  async toggleArchive(id: string): Promise<Note> {
-    const note = await this.findById(id);
-    return this.notesRepository.toggleArchive(note);
   }
 
   async hardDelete(id: string): Promise<void> {
     const note = await this.findById(id);
     if (!note.deleted) {
-      throw new BadRequestException('Note must be soft-deleted before permanent deletion');
+      throw new BadRequestException('Note must be in trash before permanent deletion');
     }
-    await this.notesRepository.hardDelete(id);
+    return this.notesRepository.hardDelete(id);
   }
 
   async addCategory(noteId: string, categoryId: string): Promise<Note> {
     const note = await this.findById(noteId);
-    const category = await this.categoriesService.findById(categoryId);
+    const category = await this.categoriesService.findOne(categoryId);
     if (!category) throw new NotFoundException(`Category ${categoryId} not found`);
-    return this.notesRepository.addCategory(note, category);
+    if (note.categories.some((c) => c.id === categoryId)) return note;
+    return this.notesRepository.save({
+      ...note,
+      categories: [...note.categories, category],
+    });
   }
 
   async removeCategory(noteId: string, categoryId: string): Promise<Note> {
     const note = await this.findById(noteId);
-    return this.notesRepository.removeCategory(note, categoryId);
+    return this.notesRepository.save({
+      ...note,
+      categories: note.categories.filter((c) => c.id !== categoryId),
+    });
   }
 }

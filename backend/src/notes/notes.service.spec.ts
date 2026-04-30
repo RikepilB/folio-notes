@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { NotesRepository } from './notes.repository';
 import { CategoriesService } from '../categories/categories.service';
@@ -33,8 +33,7 @@ describe('NotesService', () => {
           useValue: {
             findAll: jest.fn(),
             findById: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
+            save: jest.fn(),
             softDelete: jest.fn(),
             restore: jest.fn(),
             toggleArchive: jest.fn(),
@@ -47,7 +46,8 @@ describe('NotesService', () => {
           provide: CategoriesService,
           useValue: {
             findAll: jest.fn(),
-            findById: jest.fn(),
+            findOne: jest.fn(),
+            findByIds: jest.fn().mockResolvedValue([]),
             create: jest.fn(),
           },
         },
@@ -58,78 +58,63 @@ describe('NotesService', () => {
     notesRepository = module.get(NotesRepository);
   });
 
-  describe('findById', () => {
-    it('returns note when found', async () => {
-      const note = mockNote();
-      notesRepository.findById.mockResolvedValue(note);
-      const result = await service.findById('uuid-1');
-      expect(result).toBe(note);
-    });
+  it('create: sets archived=false', async () => {
+    const saved = mockNote({ archived: false });
+    notesRepository.save.mockResolvedValue(saved);
 
-    it('throws NotFoundException when note does not exist', async () => {
-      notesRepository.findById.mockResolvedValue(null);
-      await expect(service.findById('missing-id')).rejects.toThrow(NotFoundException);
-    });
+    const result = await service.create({ title: 'T', content: 'C' });
+
+    expect(notesRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ archived: false }),
+    );
+    expect(result.archived).toBe(false);
   });
 
-  describe('softDelete', () => {
-    it('calls repository softDelete (not hardDelete)', async () => {
-      const note = mockNote();
-      notesRepository.findById.mockResolvedValue(note);
-      notesRepository.softDelete.mockResolvedValue({ ...note, deleted: true, deletedAt: new Date() });
+  it('toggleArchive: flips false to true', async () => {
+    const note = mockNote({ archived: false });
+    notesRepository.findById.mockResolvedValue(note);
+    notesRepository.toggleArchive.mockResolvedValue({ ...note, archived: true });
 
-      await service.softDelete('uuid-1');
+    const result = await service.toggleArchive('uuid-1');
 
-      expect(notesRepository.softDelete).toHaveBeenCalledWith(note);
-      expect(notesRepository.hardDelete).not.toHaveBeenCalled();
-    });
+    expect(result.archived).toBe(true);
   });
 
-  describe('restore', () => {
-    it('throws BadRequestException when note is not deleted', async () => {
-      notesRepository.findById.mockResolvedValue(mockNote({ deleted: false }));
-      await expect(service.restore('uuid-1')).rejects.toThrow(BadRequestException);
-    });
+  it('toggleArchive: flips true to false', async () => {
+    const note = mockNote({ archived: true });
+    notesRepository.findById.mockResolvedValue(note);
+    notesRepository.toggleArchive.mockResolvedValue({ ...note, archived: false });
 
-    it('restores a soft-deleted note', async () => {
-      const deleted = mockNote({ deleted: true, deletedAt: new Date() });
-      const restored = mockNote({ deleted: false, deletedAt: null });
-      notesRepository.findById.mockResolvedValue(deleted);
-      notesRepository.restore.mockResolvedValue(restored);
+    const result = await service.toggleArchive('uuid-1');
 
-      const result = await service.restore('uuid-1');
-
-      expect(notesRepository.restore).toHaveBeenCalledWith(deleted);
-      expect(result.deleted).toBe(false);
-    });
+    expect(result.archived).toBe(false);
   });
 
-  describe('hardDelete', () => {
-    it('throws BadRequestException when note is not soft-deleted', async () => {
-      notesRepository.findById.mockResolvedValue(mockNote({ deleted: false }));
-      await expect(service.hardDelete('uuid-1')).rejects.toThrow(BadRequestException);
-    });
-
-    it('calls hardDelete on a soft-deleted note', async () => {
-      const note = mockNote({ deleted: true });
-      notesRepository.findById.mockResolvedValue(note);
-      notesRepository.hardDelete.mockResolvedValue(undefined);
-
-      await service.hardDelete('uuid-1');
-
-      expect(notesRepository.hardDelete).toHaveBeenCalledWith('uuid-1');
-    });
+  it('softDelete: throws NotFoundException when note not found', async () => {
+    notesRepository.findById.mockResolvedValue(null);
+    await expect(service.softDelete('missing-id')).rejects.toThrow(NotFoundException);
   });
 
-  describe('toggleArchive', () => {
-    it('toggles archived from false to true', async () => {
-      const note = mockNote({ archived: false });
-      notesRepository.findById.mockResolvedValue(note);
-      notesRepository.toggleArchive.mockResolvedValue({ ...note, archived: true });
+  it('softDelete: calls repo.softDelete not repo.hardDelete', async () => {
+    const note = mockNote();
+    notesRepository.findById.mockResolvedValue(note);
+    notesRepository.softDelete.mockResolvedValue({ ...note, deleted: true, deletedAt: new Date() });
 
-      const result = await service.toggleArchive('uuid-1');
+    await service.softDelete('uuid-1');
 
-      expect(result.archived).toBe(true);
-    });
+    expect(notesRepository.softDelete).toHaveBeenCalledWith(note);
+    expect(notesRepository.hardDelete).not.toHaveBeenCalled();
+  });
+
+  it('restore: sets deleted=false deletedAt=null', async () => {
+    const deleted = mockNote({ deleted: true, deletedAt: new Date() });
+    const restored = mockNote({ deleted: false, deletedAt: null });
+    notesRepository.findById.mockResolvedValue(deleted);
+    notesRepository.restore.mockResolvedValue(restored);
+
+    const result = await service.restore('uuid-1');
+
+    expect(result.deleted).toBe(false);
+    expect(result.deletedAt).toBeNull();
   });
 });

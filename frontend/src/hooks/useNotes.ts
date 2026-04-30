@@ -1,101 +1,147 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { notesApi } from '../api/notesApi';
-import type {
-  Note,
-  CreateNotePayload,
-  UpdateNotePayload,
-} from '../types';
+import {
+  getNotes,
+  createNote as apiCreateNote,
+  updateNote as apiUpdateNote,
+  toggleArchive,
+  softDeleteNote,
+  restoreNote as apiRestoreNote,
+  hardDeleteNote as apiHardDeleteNote,
+} from '../api/notesApi';
+import type { Note, CreateNotePayload, UpdateNotePayload } from '../types';
 
-export interface FetchNotesParams {
-  archived?: boolean;
-  deleted?: boolean;
-  search?: string;
-  categoryId?: string;
-}
-
-export interface UseNotesReturn {
-  notes: Note[];
-  loading: boolean;
-  error: string | null;
-  createNote: (payload: CreateNotePayload) => Promise<Note>;
-  updateNote: (id: string, payload: UpdateNotePayload) => Promise<Note>;
-  deleteNote: (id: string) => Promise<void>;
-  restoreNote: (id: string) => Promise<Note>;
-  permanentDelete: (id: string) => Promise<void>;
-  toggleArchive: (id: string) => Promise<Note>;
-  refetch: () => void;
-}
-
-export function useNotes(params?: FetchNotesParams): UseNotesReturn {
+export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [archivedNotes, setArchivedNotes] = useState<Note[]>([]);
+  const [deletedNotes, setDeletedNotes] = useState<Note[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const paramsKey = JSON.stringify(params);
-  const paramsRef = useRef(params);
-  paramsRef.current = params;
 
-  const fetch = useCallback(() => {
+  const fetchNotes = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
-    notesApi
-      .fetchNotes(paramsRef.current)
-      .then(setNotes)
-      .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Failed to load notes';
-        setError(message);
-      })
-      .finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paramsKey]);
+    try {
+      const [active, archived, deleted] = await Promise.all([
+        getNotes(
+          false,
+          false,
+          searchQuery || undefined,
+          activeCategory || undefined,
+        ),
+        getNotes(true, false),
+        getNotes(false, true),
+      ]);
+      setNotes(active);
+      setArchivedNotes(archived);
+      setDeletedNotes(deleted);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load notes');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, activeCategory]);
 
+  // Keep a stable ref to fetchNotes so the initial-mount effect can call the
+  // latest version without listing it as a dependency (avoids an infinite loop
+  // because fetchNotes identity changes whenever searchQuery/activeCategory change).
+  const fetchNotesRef = useRef(fetchNotes);
+  fetchNotesRef.current = fetchNotes;
+
+  // Initial load — runs exactly once on mount.
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    void fetchNotesRef.current();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const createNote = useCallback(async (payload: CreateNotePayload): Promise<Note> => {
-    const note = await notesApi.createNote(payload);
-    setNotes(prev => [note, ...prev]);
-    return note;
+  // Debounced re-fetch whenever search query or active category changes.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchNotes();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchNotes]);
+
+  // --- Mutations ---
+
+  const createNote = useCallback(
+    async (dto: CreateNotePayload): Promise<Note> => {
+      const note = await apiCreateNote(dto);
+      await fetchNotes();
+      return note;
+    },
+    [fetchNotes],
+  );
+
+  const updateNote = useCallback(
+    async (id: string, dto: UpdateNotePayload): Promise<Note> => {
+      const note = await apiUpdateNote(id, dto);
+      await fetchNotes();
+      return note;
+    },
+    [fetchNotes],
+  );
+
+  const archiveNote = useCallback(
+    async (id: string): Promise<Note> => {
+      const note = await toggleArchive(id);
+      await fetchNotes();
+      return note;
+    },
+    [fetchNotes],
+  );
+
+  const deleteNote = useCallback(
+    async (id: string): Promise<void> => {
+      await softDeleteNote(id);
+      await fetchNotes();
+    },
+    [fetchNotes],
+  );
+
+  const restoreNote = useCallback(
+    async (id: string): Promise<Note> => {
+      const note = await apiRestoreNote(id);
+      await fetchNotes();
+      return note;
+    },
+    [fetchNotes],
+  );
+
+  const hardDeleteNote = useCallback(
+    async (id: string): Promise<void> => {
+      await apiHardDeleteNote(id);
+      await fetchNotes();
+    },
+    [fetchNotes],
+  );
+
+  // --- Search / category setters ---
+
+  const setSearch = useCallback((q: string): void => {
+    setSearchQuery(q);
   }, []);
 
-  const updateNote = useCallback(async (id: string, payload: UpdateNotePayload): Promise<Note> => {
-    const updated = await notesApi.updateNote(id, payload);
-    setNotes(prev => prev.map(n => (n.id === id ? updated : n)));
-    return updated;
-  }, []);
-
-  const deleteNote = useCallback(async (id: string): Promise<void> => {
-    await notesApi.deleteNote(id);
-    setNotes(prev => prev.filter(n => n.id !== id));
-  }, []);
-
-  const restoreNote = useCallback(async (id: string): Promise<Note> => {
-    const restored = await notesApi.restoreNote(id);
-    setNotes(prev => prev.map(n => (n.id === id ? restored : n)));
-    return restored;
-  }, []);
-
-  const permanentDelete = useCallback(async (id: string): Promise<void> => {
-    await notesApi.permanentDelete(id);
-    setNotes(prev => prev.filter(n => n.id !== id));
-  }, []);
-
-  const toggleArchive = useCallback(async (id: string): Promise<Note> => {
-    const updated = await notesApi.toggleArchive(id);
-    setNotes(prev => prev.map(n => (n.id === id ? updated : n)));
-    return updated;
+  const setCategory = useCallback((id: string | null): void => {
+    setActiveCategory(id);
   }, []);
 
   return {
     notes,
+    archivedNotes,
+    deletedNotes,
+    searchQuery,
+    activeCategory,
     loading,
     error,
+    fetchNotes,
     createNote,
     updateNote,
+    archiveNote,
     deleteNote,
     restoreNote,
-    permanentDelete,
-    toggleArchive,
-    refetch: fetch,
+    hardDeleteNote,
+    setSearch,
+    setCategory,
   };
 }

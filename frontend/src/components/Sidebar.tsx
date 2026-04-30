@@ -1,38 +1,58 @@
 import React from 'react';
 
-export type ViewMode = 'notes' | 'archived' | 'trash';
+type ActiveView = 'active' | 'archived' | 'deleted';
 
 interface SidebarProps {
-  currentView: ViewMode;
-  onViewChange: (view: ViewMode) => void;
+  activeView: ActiveView;
+  onViewChange: (view: ActiveView) => void;
+  notesCount: number;
+  archivedCount: number;
+  deletedCount: number;
 }
 
-const NAV_ITEMS: { label: string; view: ViewMode }[] = [
-  { label: 'Notes', view: 'notes' },
-  { label: 'Archived', view: 'archived' },
-  { label: 'Trash', view: 'trash' },
-];
+interface NavItem {
+  view: ActiveView;
+  label: string;
+  count: number;
+}
 
 export function Sidebar({
-  currentView,
+  activeView,
   onViewChange,
+  notesCount,
+  archivedCount,
+  deletedCount,
 }: SidebarProps): React.ReactElement {
+  const navItems: NavItem[] = [
+    { view: 'active', label: 'Notes', count: notesCount },
+    { view: 'archived', label: 'Archived', count: archivedCount },
+    { view: 'deleted', label: 'Recently Deleted', count: deletedCount },
+  ];
+
   return (
-    <aside className="w-48 shrink-0 border-r border-[var(--border)] h-full flex flex-col p-4 gap-1">
-      <span className="text-lg font-bold text-white mb-4">Folio</span>
-      {NAV_ITEMS.map(item => (
-        <button
-          key={item.view}
-          onClick={() => onViewChange(item.view)}
-          className={`text-left px-3 py-2 rounded text-sm transition-colors ${
-            currentView === item.view
-              ? 'bg-[var(--brand-violet)] text-white'
-              : 'text-[var(--text-muted)] hover:text-white hover:bg-[var(--border)]'
-          }`}
-        >
-          {item.label}
-        </button>
-      ))}
+    <aside className="w-48 shrink-0 border-r border-[var(--border)] flex flex-col gap-1 p-4">
+      <span className="text-lg font-semibold text-white mb-4">Folio</span>
+      {navItems.map((item) => {
+        const isActive = activeView === item.view;
+        return (
+          <button
+            key={item.view}
+            onClick={() => onViewChange(item.view)}
+            className={`flex items-center text-left text-sm py-2 rounded capitalize transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-orange)] ${
+              isActive
+                ? 'text-[var(--brand-orange)] border-l-2 border-[var(--brand-orange)] pl-[10px] pr-3'
+                : 'text-[var(--text-muted)] hover:text-white hover:bg-[var(--surf2)] px-3'
+            }`}
+          >
+            <span className="truncate">{item.label}</span>
+            {item.count > 0 && (
+              <span className="ml-auto text-xs bg-[var(--border)] text-[var(--text-muted)] rounded-full px-1.5 py-0.5 shrink-0">
+                {item.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </aside>
   );
 }
