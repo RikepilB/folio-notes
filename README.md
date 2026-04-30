@@ -59,7 +59,7 @@ Docker Compose version v2.30.3
 
 ### Use the live app
 
-Visit **https://frontend-rouge-kappa-88.vercel.app** — no setup required.
+Visit **[https://frontend-rouge-kappa-88.vercel.app](https://folio-notes-lake.vercel.app/)** — no setup required.
 
 ### Run locally
 
