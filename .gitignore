@@ -6,3 +6,11 @@ claude.md
 .claude/
 *.log
 postgres_data/
+.playwright-mcp/
+skills-lock.json
+NOW()
+nul
+void,+
+backend/nul
+frontend/nul
+frontend/void,+

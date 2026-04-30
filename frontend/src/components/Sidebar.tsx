@@ -1,58 +1,129 @@
 import React from 'react';
 
-type ActiveView = 'active' | 'archived' | 'deleted';
+type ActiveRoute = 'notes' | 'archived' | 'deleted';
+
+interface SidebarCounts {
+  notes: number;
+  archived: number;
+}
 
 interface SidebarProps {
-  activeView: ActiveView;
-  onViewChange: (view: ActiveView) => void;
-  notesCount: number;
-  archivedCount: number;
-  deletedCount: number;
+  activeRoute: ActiveRoute;
+  counts: SidebarCounts;
+  onNavigate: (route: ActiveRoute) => void;
 }
 
 interface NavItem {
-  view: ActiveView;
+  route: ActiveRoute;
   label: string;
-  count: number;
+  count?: number;
 }
 
-export function Sidebar({
-  activeView,
-  onViewChange,
-  notesCount,
-  archivedCount,
-  deletedCount,
-}: SidebarProps): React.ReactElement {
-  const navItems: NavItem[] = [
-    { view: 'active', label: 'Notes', count: notesCount },
-    { view: 'archived', label: 'Archived', count: archivedCount },
-    { view: 'deleted', label: 'Recently Deleted', count: deletedCount },
-  ];
+const NAV_ITEMS: NavItem[] = [
+  { route: 'notes', label: 'My Notes' },
+  { route: 'archived', label: 'Archived' },
+  { route: 'deleted', label: 'Trash' },
+];
+
+export function Sidebar({ activeRoute, counts, onNavigate }: SidebarProps): React.ReactElement {
+  const getCount = (route: ActiveRoute): number | undefined => {
+    if (route === 'notes') return counts.notes;
+    if (route === 'archived') return counts.archived;
+    return undefined;
+  };
 
   return (
-    <aside className="w-48 shrink-0 border-r border-[var(--border)] flex flex-col gap-1 p-4">
-      <span className="text-lg font-semibold text-white mb-4">Folio</span>
-      {navItems.map((item) => {
-        const isActive = activeView === item.view;
-        return (
-          <button
-            key={item.view}
-            onClick={() => onViewChange(item.view)}
-            className={`flex items-center text-left text-sm py-2 rounded capitalize transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-orange)] ${
-              isActive
-                ? 'text-[var(--brand-orange)] border-l-2 border-[var(--brand-orange)] pl-[10px] pr-3'
-                : 'text-[var(--text-muted)] hover:text-white hover:bg-[var(--surf2)] px-3'
-            }`}
-          >
-            <span className="truncate">{item.label}</span>
-            {item.count > 0 && (
-              <span className="ml-auto text-xs bg-[var(--border)] text-[var(--text-muted)] rounded-full px-1.5 py-0.5 shrink-0">
-                {item.count}
-              </span>
-            )}
-          </button>
-        );
-      })}
+    <aside
+      style={{
+        width: '200px',
+        flexShrink: 0,
+        background: 'var(--surf2)',
+        borderRight: '0.5px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 'var(--text-lg)',
+          fontWeight: 500,
+          color: 'var(--text-primary)',
+          padding: '16px 14px 12px',
+        }}
+      >
+        Folio
+      </div>
+
+      <div
+        style={{
+          fontSize: 'var(--text-xs)',
+          color: 'var(--text-muted)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          padding: '0 14px 6px',
+        }}
+      >
+        Browse
+      </div>
+
+      <nav role="navigation" aria-label="Main navigation">
+        {NAV_ITEMS.map((item) => {
+          const isActive = activeRoute === item.route;
+          const count = getCount(item.route);
+          return (
+            <button
+              key={item.route}
+              onClick={() => onNavigate(item.route)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                padding: isActive ? '8px 12px 8px 12px' : '8px 14px',
+                border: 'none',
+                borderLeft: isActive ? '2px solid var(--brand-violet-light)' : '2px solid transparent',
+                background: isActive ? 'var(--nav-active-bg)' : 'transparent',
+                color: isActive ? 'var(--brand-violet-light)' : 'var(--text-muted)',
+                fontSize: 'var(--text-sm)',
+                fontFamily: 'var(--font-body)',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'background 150ms ease-out, color 150ms ease-out',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'var(--surf2)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }
+              }}
+            >
+              <span style={{ flex: 1 }}>{item.label}</span>
+
+              {count !== undefined && count > 0 && (
+                <span
+                  style={{
+                    marginLeft: 'auto',
+                    background: 'var(--surf3)',
+                    color: 'var(--text-muted)',
+                    fontSize: 'var(--text-xs)',
+                    borderRadius: '4px',
+                    padding: '1px 5px',
+                    flexShrink: 0,
+                  }}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </aside>
   );
 }

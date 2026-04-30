@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import type { Note } from '../types';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface DeleteConfirmProps {
   note: Note;
@@ -8,27 +9,110 @@ interface DeleteConfirmProps {
 }
 
 export function DeleteConfirm({ note, onConfirm, onCancel }: DeleteConfirmProps): React.ReactElement {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
+  const handleCancel = useCallback(() => onCancel(), [onCancel]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') handleCancel();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [handleCancel]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--surf2)] p-6 max-w-sm w-full mx-4">
-        <h2 className="text-white font-semibold mb-2">
-          Delete &ldquo;{note.title}&rdquo;?
+    <div
+      role="presentation"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.6)',
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-confirm-title"
+        style={{
+          background: 'var(--surf2)',
+          borderRadius: '12px',
+          padding: '24px',
+          width: '100%',
+          maxWidth: '380px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+        }}
+      >
+        <h2
+          id="delete-confirm-title"
+          style={{
+            margin: 0,
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-lg)',
+            fontWeight: 500,
+            color: 'var(--text-primary)',
+          }}
+        >
+          Delete this note?
         </h2>
-        <p className="text-sm text-[var(--text-muted)] mb-6">
-          This note will be moved to trash.
+
+        <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+          &ldquo;{note.title}&rdquo; will be moved to Recently Deleted. You have 30 days to restore it.
         </p>
-        <div className="flex gap-3 justify-end">
+
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded border border-[var(--border)] text-[var(--text-muted)] hover:text-white transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-orange)]"
+            style={{
+              padding: '0 16px',
+              height: '30px',
+              borderRadius: '8px',
+              border: '0.5px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--text-muted)',
+              fontSize: 'var(--text-sm)',
+              fontFamily: 'var(--font-body)',
+              cursor: 'pointer',
+              transition: 'color 150ms ease-out, border-color 150ms ease-out',
+            }}
           >
             Cancel
           </button>
+
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded bg-red-600 hover:bg-red-500 text-white transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--error)';
+              e.currentTarget.style.borderColor = 'var(--error)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-muted)';
+              e.currentTarget.style.borderColor = 'var(--border)';
+            }}
+            style={{
+              padding: '0 16px',
+              height: '30px',
+              borderRadius: '8px',
+              border: '0.5px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--text-muted)',
+              fontSize: 'var(--text-sm)',
+              fontFamily: 'var(--font-body)',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'color 150ms ease-out, border-color 150ms ease-out',
+            }}
           >
-            Delete
+            Move to trash
           </button>
         </div>
       </div>
