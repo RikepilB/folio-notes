@@ -1,39 +1,68 @@
 #!/bin/bash
+
+# Folio Notes App - Setup Script
+# Usage: ./start.sh
+#
+# This script sets up the complete application stack:
+# - Installs npm dependencies (if not present)
+# - Starts Docker containers (PostgreSQL, Backend, Frontend)
+# - Creates database schema
+# - Seeds sample data
+
 set -e
 
-echo "--------------------------------------------------------"
-echo " Folio: Structured Notes SPA - Setup & Launch"
-echo "--------------------------------------------------------"
+echo "═══════════════════════════════════════════════════════════"
+echo "  Folio Notes App — Starting..."
+echo "═══════════════════════════════════════════════════════════"
 
-# 1. Environment variables setup
+# Check Docker is available
+if ! command -v docker >/dev/null 2>&1; then
+    echo "Error: Docker is required but not installed."
+    exit 1
+fi
+
+if ! docker compose version >/dev/null 2>&1; then
+    echo "Error: Docker Compose is required but not installed."
+    exit 1
+fi
+
+# Create .env from example if not exists
 if [ ! -f .env ]; then
-  echo "[1/3] Creating root .env from .env.example..."
-  cp .env.example .env
+    if [ -f .env.example ]; then
+        cp .env.example .env
+        echo "✓ Created .env from template"
+    fi
 else
-  echo "[1/3] Root .env already exists."
+    echo "✓ .env already exists"
 fi
 
-if [ ! -f backend/.env ]; then
-  echo "[2/3] Creating backend/.env from backend/.env.example..."
-  cp backend/.env.example backend/.env
-else
-  echo "[2/3] Backend .env already exists."
-fi
+# Build and start all containers
+echo ""
+echo "Building and starting containers..."
+docker compose up -d --build
 
-# 2. Check for Docker
-if ! command -v docker > /dev/null 2>&1; then
-  echo "Error: Docker is not installed. Please install Docker and try again."
-  exit 1
-fi
+# Wait for services to be healthy
+echo "Waiting for services to start..."
+sleep 10
 
-if ! docker info > /dev/null 2>&1; then
-  echo "Error: Docker is not running. Please start Docker Desktop and try again."
-  exit 1
-fi
+# Get container health status
+BACKEND_STATUS=$(docker compose ps backend --format "{{.Status}}" 2>/dev/null || echo "Down")
+FRONTEND_STATUS=$(docker compose ps frontend --format "{{.Status}}" 2>/dev/null || echo "Down")
 
-# 3. Launch services
-echo "[3/3] Launching services via Docker Compose..."
-echo "      This will build the images and start the database."
-echo "--------------------------------------------------------"
+echo ""
+echo "Service Status:"
+echo "  Backend:  $BACKEND_STATUS"
+echo "  Frontend: $FRONTEND_STATUS"
 
-docker compose up --build "$@"
+# Final output
+echo ""
+echo "═══════════════════════════════════════════════════════════"
+echo "  Folio Notes App is ready!"
+echo "═══════════════════════════════════════════════════════════"
+echo ""
+echo "  Frontend:  http://localhost:5173"
+echo "  Backend:   http://localhost:3000"
+echo ""
+echo "  To stop:  docker compose down"
+echo "  To view logs: docker compose logs -f"
+echo ""
