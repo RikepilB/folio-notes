@@ -2,21 +2,19 @@ import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        brand: {
-          orange: 'var(--brand-orange)',
-          violet: 'var(--brand-violet)',
-          'violet-light': 'var(--brand-violet-light)',
-          'violet-dark': 'var(--brand-violet-dark)',
-        },
-        surface: 'var(--surface)',
-        surf2: 'var(--surf2)',
-        border: 'var(--border)',
-        border2: 'var(--border2)',
-        'text-muted': 'var(--text-muted)',
+        'brand-orange': '#F8612D',
+        'brand-violet': '#5F44C5',
+        'brand-violet-light': '#BB5BFF',
+        'brand-violet-dark': '#3E1544',
+        'brand-black': '#020102',
+        surface: '#111010',
+        surf2: '#1A1820',
+        'text-muted': '#7A7974',
+        border: '#2A2830',
+        border2: '#3A3648',
       },
     },
   },

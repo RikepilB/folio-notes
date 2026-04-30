@@ -3,40 +3,91 @@ import type { Category } from '../types';
 
 interface CategoryFilterProps {
   categories: Category[];
-  selectedId: string | undefined;
-  onSelect: (id: string | undefined) => void;
+  activeId?: string;
+  onChange: (id: string | undefined) => void;
 }
 
-export function CategoryFilter({
-  categories,
-  selectedId,
-  onSelect,
-}: CategoryFilterProps): React.ReactElement {
+export function CategoryFilter({ categories, activeId, onChange }: CategoryFilterProps): React.ReactElement {
+  const pillBase: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '3px 10px',
+    borderRadius: '20px',
+    border: '0.5px solid var(--border)',
+    background: 'transparent',
+    color: 'var(--text-muted)',
+    fontSize: 'var(--text-xs)',
+    fontFamily: 'var(--font-body)',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    transition: 'color 150ms ease-out, border-color 150ms ease-out, background 150ms ease-out',
+  };
+
+  const pillActive: React.CSSProperties = {
+    background: 'var(--brand-violet-dark)',
+    borderColor: 'var(--brand-violet)',
+    color: 'var(--brand-violet-light)',
+  };
+
+  const allActive = activeId === undefined;
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div
+      role="group"
+      aria-label="Filter by category"
+      style={{
+        display: 'flex',
+        flexWrap: 'nowrap',
+        overflowX: 'auto',
+        gap: '6px',
+        scrollbarWidth: 'none',
+      }}
+    >
       <button
-        onClick={() => onSelect(undefined)}
-        className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-          selectedId === undefined
-            ? 'bg-[var(--brand-violet)] border-[var(--brand-violet)] text-white'
-            : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-violet)]'
-        }`}
+        aria-pressed={allActive}
+        onClick={() => onChange(undefined)}
+        style={allActive ? { ...pillBase, ...pillActive } : pillBase}
+        onMouseEnter={(e) => {
+          if (!allActive) {
+            e.currentTarget.style.borderColor = 'var(--brand-violet)';
+            e.currentTarget.style.color = 'var(--text-primary)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!allActive) {
+            e.currentTarget.style.borderColor = 'var(--border)';
+            e.currentTarget.style.color = 'var(--text-muted)';
+          }
+        }}
       >
         All
       </button>
-      {categories.map(cat => (
-        <button
-          key={cat.id}
-          onClick={() => onSelect(cat.id)}
-          className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-            selectedId === cat.id
-              ? 'bg-[var(--brand-violet)] border-[var(--brand-violet)] text-white'
-              : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-violet)]'
-          }`}
-        >
-          {cat.name}
-        </button>
-      ))}
+
+      {categories.map((cat) => {
+        const isActive = activeId === cat.id;
+        return (
+          <button
+            key={cat.id}
+            aria-pressed={isActive}
+            onClick={() => onChange(cat.id)}
+            style={isActive ? { ...pillBase, ...pillActive } : pillBase}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.borderColor = 'var(--brand-violet)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }
+            }}
+          >
+            {cat.name}
+          </button>
+        );
+      })}
     </div>
   );
 }

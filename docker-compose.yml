@@ -1,33 +1,32 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: folio
-      POSTGRES_PASSWORD: folio_password
-      POSTGRES_DB: folio_db
+      POSTGRES_DB: ${DB_NAME:-folio}
+      POSTGRES_USER: ${DB_USER:-folio}
+      POSTGRES_PASSWORD: ${DB_PASS:-folio}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U folio -d folio_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-folio} -d ${DB_NAME:-folio}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
   backend:
     build: ./backend
     ports:
-      - "3000:3000"
-    env_file:
-      - ./backend/.env.example
+      - "${PORT:-3000}:3000"
     environment:
       NODE_ENV: development
       DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USERNAME: folio
-      DB_PASSWORD: folio_password
-      DB_NAME: folio_db
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-folio}
+      DB_USER: ${DB_USER:-folio}
+      DB_PASS: ${DB_PASS:-folio}
+      PORT: ${PORT:-3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,6 +35,8 @@ services:
     build: ./frontend
     ports:
       - "5173:5173"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     depends_on:
       - backend
 

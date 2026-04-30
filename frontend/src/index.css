@@ -3,15 +3,56 @@
 @tailwind utilities;
 
 :root {
-  --brand-orange: #F8612D;
-  --brand-violet: #5F44C5;
+  /* ── Brand core ── */
+  --brand-black:        #020102;
+  --brand-white:        #FFFBFF;
+  --brand-violet:       #5F44C5;
   --brand-violet-light: #BB5BFF;
-  --brand-violet-dark: #3E1544;
+  --brand-violet-dark:  #3E1544;
+  --brand-blue:         #3C3EE9;
+  --brand-blue-dark:    #212390;
+  --brand-orange:       #F8612D;
+
+  /* ── Neutrals ── */
+  --text-primary: #FFFBFF;
+  --text-muted:   #7A7974;
+  --border-soft:  #2A2830;
+
+  /* ── Semantic states ── */
+  --success: #437A22;
+  --error:   #A12C7B;
+  --warning: #B8651B;
+
+  /* ── Surface scale ── */
   --surface: #111010;
-  --surf2: #1A1820;
-  --border: #2A2830;
+  --surf2:   #1A1820;
+  --surf3:   #221F2C;
+  --border:  #2A2830;
   --border2: #3A3648;
-  --text-muted: #7A7974;
+  --nav-active-bg: #1A1220;
+
+  /* ── Typography ── */
+  --font-display: 'Lora', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  --text-xs:   10px;
+  --text-sm:   11px;
+  --text-base: 12px;
+  --text-md:   13px;
+  --text-lg:   15px;
+  --text-xl:   16px;
+  --text-2xl:  22px;
+
+  /* ── Spacing ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  14px;
+  --space-5:  16px;
+  --space-6:  20px;
+  --space-8:  28px;
+  --space-10: 40px;
 }
 
 *,
@@ -22,7 +63,16 @@
 
 body {
   margin: 0;
-  background-color: var(--surface);
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--brand-black);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
