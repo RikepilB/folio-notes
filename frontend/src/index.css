@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ── Brand core ── */
+  --brand-black:        #020102;
+  --brand-white:        #FFFBFF;
+  --brand-violet:       #5F44C5;
+  --brand-violet-light: #BB5BFF;
+  --brand-violet-dark:  #3E1544;
+  --brand-blue:         #3C3EE9;
+  --brand-blue-dark:    #212390;
+  --brand-orange:       #F8612D;
+
+  /* ── Neutrals ── */
+  --text-primary: #FFFBFF;
+  --text-muted:   #9A9894;
+  --text-muted-low: #6A6864;
+  --border-soft:  #2A2830;
+
+  /* ── Semantic states ── */
+  --success: #437A22;
+  --error:   #A12C7B;
+  --warning: #B8651B;
+
+  /* ── Surface scale ── */
+  --page-bg: #020102;
+  --surface: #161416;
+  --surf2:   #1E1C20;
+  --surf3:   #252225;
+  --border:  #2E2C30;
+  --border2: #3A363C;
+  --nav-active-bg: #1A1220;
+
+  /* ── Typography ── */
+  --font-display: 'Lora', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  --text-xs:   10px;
+  --text-sm:   11px;
+  --text-base: 12px;
+  --text-md:   13px;
+  --text-lg:   15px;
+  --text-xl:   16px;
+  --text-2xl:  22px;
+
+  /* ── Spacing ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  14px;
+  --space-5:  16px;
+  --space-6:  20px;
+  --space-8:  28px;
+  --space-10: 40px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+@layer utilities {
+  .bg-page { background: var(--page-bg); }
+  .bg-surface { background: var(--surface); }
+  .bg-surf2 { background: var(--surf2); }
+  .bg-surf3 { background: var(--surf3); }
+  .border-default { border-color: var(--border); }
+  .border-hover { border-color: var(--border2); }
+  .text-body { color: var(--text-primary); }
+  .text-muted { color: var(--text-muted); }
+  .text-muted-low { color: var(--text-muted-low); }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
+}

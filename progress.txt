@@ -1,0 +1,99 @@
+# Folio — Notes SPA
+
+**Last updated:** 2026-04-30
+
+---
+
+## Deployment Status: ✅ COMPLETE
+
+### Live URLs (Demo - No Auth)
+| Service | URL | Access |
+|---------|-----|--------|
+| Frontend | `[vercel-url].vercel.app` | Public |
+| Backend API | Supabase Edge Functions | Public (demo) |
+| Database | Supabase PostgreSQL | Managed |
+
+### Infrastructure
+- **Frontend:** Vercel (auto-deploys from `/frontend/dist`)
+- **Backend:** Supabase Edge Functions — single function handles all routes
+- **Database:** Supabase PostgreSQL — tables: notes, categories, note_categories
+
+---
+
+## What Was Built
+
+### Phase 1 — Core Features ✅
+- CRUD operations for notes (create, read, update, soft-delete)
+- Archive / unarchive notes
+- Soft-delete trash with 30-day expiry + restore
+- Real-time case-insensitive search
+- TypeScript strict mode end-to-end
+
+### Phase 2 — Extra Credit ✅
+- Add / remove categories on individual notes
+- Filter notes list by category
+- Sort notes by creation date or update date (asc/desc)
+
+---
+
+## Architecture Notes
+
+### Security (Current Demo State)
+- **Frontend:** Public (no auth required)
+- **Backend:** Public demo API (no verify-jwt) - suitable for demo/prototyping ONLY
+- **Database:** RLS enabled but allow-all policies (demo mode)
+
+### For Production
+To secure for production:
+1. Enable Supabase Auth
+2. Add user_id column to notes
+3. Enable JWT verification on Edge Function
+4. Add RLS policies per user
+5. Add rate limiting
+
+---
+
+## API Endpoints
+
+### Notes
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /notes | List with filters |
+| POST | /notes | Create note |
+| GET | /notes/:id | Get single note |
+| PUT | /notes/:id | Update note |
+| DELETE | /notes/:id | Soft delete |
+| PATCH | /notes/:id/archive | Toggle archive |
+| PATCH | /notes/:id/restore | Restore from trash |
+
+### Categories
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /categories | List all |
+| POST | /categories | Create |
+| DELETE | /categories/:id | Delete |
+
+---
+
+## Key Files
+- `supabase/functions/notes-api/index.ts` — Edge Function
+- `frontend/src/api/notesApi.ts` — HTTP client
+- `frontend/src/types/index.ts` — Shared types
+- `docs/DESIGN.md` — UI design tokens
+
+---
+
+## Deployment Commands
+```bash
+# Backend
+npx supabase functions deploy notes-api --project-ref [ref] --no-verify-jwt
+
+# Frontend
+cd frontend && vercel deploy --prod
+```
+
+---
+
+## Skills Installed (Claude Code)
+- 26 skills in 5 categories: DESIGN, SECURITY, DEBUG, BACKEND, PROCESS
+- Reference: `.claude/skills/AGENTS.md`
