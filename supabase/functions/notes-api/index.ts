@@ -296,14 +296,14 @@ serve(async (req) => {
          if (error) throw error;
        }
 
-      if (method === "DELETE") {
-        const { error } = await supabase
-          .from("note_categories")
-          .delete()
-          .eq("note__id", noteId)
-          .eq("category_id", catId);
-        if (error) throw error;
-      }
+       if (method === "DELETE") {
+         const { error } = await supabase
+           .from("note_categories")
+           .delete()
+           .eq("note_id", noteId)
+           .eq("category_id", catId);
+         if (error) throw error;
+       }
 
       const { data: note } = await supabase
         .from("notes")
