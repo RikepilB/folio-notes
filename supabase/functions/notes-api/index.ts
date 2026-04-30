@@ -84,10 +84,10 @@ serve(async (req) => {
       const deleted = url.searchParams.get("deleted") === "true";
       const search = url.searchParams.get("search")?.slice(0, 200);
       const categoryId = url.searchParams.get("categoryId");
-      const sortByParam = url.searchParams.get("sortBy") ?? "updatedAt";
+       const sortByParam = url.searchParams.get("sortBy") ?? "updated_at";
       const orderParam = url.searchParams.get("order") ?? "DESC";
 
-      const sortBy = VALID_SORT_FIELDS.includes(sortByParam) ? sortByParam : "updatedAt";
+       const sortBy = VALID_SORT_FIELDS.includes(sortByParam) ? sortByParam : "updated_at";
       const ascending = orderParam === "ASC";
 
       if (categoryId && !isValidUuid(categoryId)) {

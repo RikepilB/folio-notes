@@ -2,7 +2,7 @@
 
 A production-ready, type-safe notes application with category organization, archive, and trash functionality.
 
-**Live demo**: https://frontend-rouge-kappa-88.vercel.app
+**Live demo**: https://folio-notes-lake.vercel.app/
 
 ## Overview
 
@@ -59,7 +59,7 @@ Docker Compose version v2.30.3
 
 ### Use the live app
 
-Visit **https://frontend-rouge-kappa-88.vercel.app** — no setup required.
+Visit **https://folio-notes-lake.vercel.app/** — no setup required.
 
 ### Run locally
 
@@ -84,7 +84,7 @@ The `start.sh` script will:
 - **API Documentation**: See endpoint tables below
 
 **Production access points:**
-- **Frontend**: https://frontend-rouge-kappa-88.vercel.app
+- **Frontend**: https://folio-notes-lake.vercel.app/
 - **Backend API**: `https://ffitssrosgkrzgjozscc.supabase.co/functions/v1/notes-api`
 
 ## How to Use
