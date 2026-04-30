@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { Note, Category, CreateNotePayload, UpdateNotePayload } from '../types';
 
 const api = axios.create({
-  baseURL: 'https://ffitssrosgkrzgjozscc.supabase.co/functions/v1/notes-api',
+  baseURL: import.meta.env.VITE_SUPABASE_FUNCTIONS_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 

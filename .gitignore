@@ -41,3 +41,18 @@ test-results/
 # Misc
 *.tgz
 .cache/
+
+# Claude Code / AI config (local only)
+.claude/
+.playwright-mcp/
+skills-lock.json
+claude.md
+
+# Windows NUL device artifacts
+nul
+backend/nul
+frontend/nul
+frontend/void,+
+
+# Screenshots
+*.png

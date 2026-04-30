@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import type { Note } from '../types';
 import { relativeTime } from '../utils/relativeTime';
 
@@ -13,15 +13,6 @@ function truncate(text: string): string {
   return text.length > 120 ? `${text.slice(0, 120)}…` : text;
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--surface)',
-  borderRadius: '12px',
-  padding: '16px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '10px',
-  transition: 'border-color 150ms ease-out, transform 150ms ease-out, box-shadow 150ms ease-out',
-};
 
 const baseBtn: React.CSSProperties = {
   display: 'inline-flex',
