@@ -56,3 +56,9 @@ frontend/void,+
 
 # Screenshots
 *.png
+
+# Generated progress/deployment docs with secrets
+docs/progress.txt
+progress.txt
+CLAUDE_DEPLOYMENT_CONTEXT.md
+DEPLOYMENT_REPORT.md

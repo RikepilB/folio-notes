@@ -24,7 +24,7 @@ function deriveCategories(notes: Note[]): Category[] {
   const seen = new Set<string>();
   const cats: Category[] = [];
   for (const note of notes) {
-    for (const cat of note.categories) {
+    for (const cat of (note.categories ?? [])) {
       if (!seen.has(cat.id)) {
         seen.add(cat.id);
         cats.push(cat);
