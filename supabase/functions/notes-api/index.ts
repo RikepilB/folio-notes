@@ -108,24 +108,34 @@ serve(async (req) => {
       const { data: notes, error } = await query;
       if (error) throw error;
 
-      const notesWithCategories = await Promise.all(
-        (notes ?? []).map(async (note) => {
-          const { data: catLinks } = await supabase
-            .from("note_categories")
-            .select("category_id")
-            .eq("note_id", note.id);
-          const catIds = catLinks?.map((c) => c.category_id) ?? [];
-          let categories: { id: string; name: string }[] = [];
-          if (catIds.length > 0) {
-            const { data: cats } = await supabase
-              .from("categories")
-              .select("id, name")
-              .in("id", catIds);
-            categories = cats ?? [];
-          }
-          return { ...note, categories };
-        })
-      );
+      const notesWithCategories = notes ?? [];
+
+      if (notesWithCategories.length > 0) {
+        const noteIds = notesWithCategories.map(n => n.id);
+        const { data: links } = await supabase
+          .from("note_categories")
+          .select("note_id, category_id")
+          .in("note_id", noteIds);
+        
+        const catIds = [...new Set(links?.map(l => l.category_id) ?? [])];
+        let cats: { id: string; name: string }[] = [];
+        if (catIds.length > 0) {
+          const { data } = await supabase.from("categories").select("id, name").in("id", catIds);
+          cats = data ?? [];
+        }
+
+        const catMap = Object.groupBy(cats, c => c.id);
+        const linkMap = Object.groupBy(links ?? [], l => l.note_id);
+
+        return notesWithCategories.map(note => ({
+          ...note,
+          categories: (linkMap[note.id] ?? [])
+            .map(l => catMap[l.category_id]?.[0])
+            .filter(Boolean)
+        }));
+      }
+
+      return notesWithCategories;
 
       let filtered = notesWithCategories;
       if (categoryId) {
