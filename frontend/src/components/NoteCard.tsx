@@ -54,9 +54,9 @@ export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): Re
       }}
     >
       {/* Category pills */}
-      {note.categories.length > 0 && (
+      {(note.categories ?? []).length > 0 && (
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-          {note.categories.map((cat) => (
+          {(note.categories ?? []).map((cat) => (
             <span
               key={cat.id}
               style={{
