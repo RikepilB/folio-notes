@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN") ?? "*";
 
@@ -9,12 +9,13 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 };
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const VALID_SORT_FIELDS = ["createdAt", "updatedAt"];
+const VALID_SORT_FIELDS = ["created_at", "updated_at"];
 
 function isValidUuid(id: string): boolean {
   return UUID_RE.test(id);
@@ -31,8 +32,21 @@ function badRequest(message: string): Response {
   return jsonResponse({ error: message }, 400);
 }
 
-function serverError(): Response {
-  return jsonResponse({ error: "An unexpected error occurred. Please try again." }, 500);
+async function getNoteCategories(noteId: string) {
+  const { data } = await supabase
+    .from("note_categories")
+    .select("categories(id, name)")
+    .eq("note_id", noteId);
+  return data?.map((row) => row.categories).flat() ?? [];
+}
+
+async function attachCategories(noteId: string, categoryIds: string[]) {
+  await supabase.from("note_categories").delete().eq("note_id", noteId);
+  if (categoryIds.length > 0) {
+    await supabase.from("note_categories").insert(
+      categoryIds.map((catId) => ({ note_id: noteId, category_id: catId }))
+    );
+  }
 }
 
 serve(async (req) => {
@@ -70,10 +84,10 @@ serve(async (req) => {
       const deleted = url.searchParams.get("deleted") === "true";
       const search = url.searchParams.get("search")?.slice(0, 200);
       const categoryId = url.searchParams.get("categoryId");
-      const sortByParam = url.searchParams.get("sortBy") ?? "updatedAt";
+       const sortByParam = url.searchParams.get("sortBy") ?? "updated_at";
       const orderParam = url.searchParams.get("order") ?? "DESC";
 
-      const sortBy = VALID_SORT_FIELDS.includes(sortByParam) ? sortByParam : "updatedAt";
+       const sortBy = VALID_SORT_FIELDS.includes(sortByParam) ? sortByParam : "updated_at";
       const ascending = orderParam === "ASC";
 
       if (categoryId && !isValidUuid(categoryId)) {
@@ -82,7 +96,7 @@ serve(async (req) => {
 
       let query = supabase
         .from("notes")
-        .select(`*, categories:categories(id, name)`)
+        .select("*")
         .eq("archived", archived)
         .eq("deleted", deleted)
         .order(sortBy, { ascending });
@@ -90,18 +104,46 @@ serve(async (req) => {
       if (search) {
         query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
       }
-      if (categoryId) {
-        query = query.eq("note_categories.category_id", categoryId);
-      }
-      if (deleted) {
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - 30);
-        query = query.gt("deleted_at", cutoff.toISOString());
+
+      const { data: notes, error } = await query;
+      if (error) throw error;
+
+      const notesWithCategories = notes ?? [];
+
+      let enriched: Array<Record<string, unknown>> = notesWithCategories;
+
+      if (notesWithCategories.length > 0) {
+        const noteIds = notesWithCategories.map(n => n.id);
+        const { data: links } = await supabase
+          .from("note_categories")
+          .select("note_id, category_id")
+          .in("note_id", noteIds);
+
+        const catIds = [...new Set(links?.map(l => l.category_id) ?? [])];
+        let cats: { id: string; name: string }[] = [];
+        if (catIds.length > 0) {
+          const { data } = await supabase.from("categories").select("id, name").in("id", catIds);
+          cats = data ?? [];
+        }
+
+        const catMap = Object.groupBy(cats, c => c.id);
+        const linkMap = Object.groupBy(links ?? [], l => l.note_id);
+
+        enriched = notesWithCategories.map(note => ({
+          ...note,
+          categories: (linkMap[note.id] ?? [])
+            .map(l => catMap[l.category_id]?.[0])
+            .filter(Boolean)
+        }));
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return jsonResponse(data ?? []);
+      const filtered = categoryId
+        ? enriched.filter((n: any) =>
+            (n.categories ?? []).some((c: any) => c.id === categoryId)
+          )
+        : enriched;
+
+      return jsonResponse(filtered);
     }
 
     // DELETE /notes/trash
@@ -129,12 +171,6 @@ serve(async (req) => {
       const title = body.title.trim().slice(0, 255);
       const content = body.content.slice(0, 100_000);
       const categoryIds: unknown = body.categoryIds;
-      if (
-        categoryIds !== undefined &&
-        (!Array.isArray(categoryIds) || categoryIds.some((id) => !isValidUuid(id)))
-      ) {
-        return badRequest("categoryIds must be an array of valid UUIDs");
-      }
 
       const { data: note, error } = await supabase
         .from("notes")
@@ -144,12 +180,11 @@ serve(async (req) => {
       if (error) throw error;
 
       if (Array.isArray(categoryIds) && categoryIds.length > 0) {
-        await supabase
-          .from("note_categories")
-          .insert(categoryIds.map((catId: string) => ({ note_id: note.id, category_id: catId })));
+        await attachCategories(note.id, categoryIds.filter(isValidUuid));
       }
 
-      return jsonResponse(note, 201);
+      const categories = await getNoteCategories(note.id);
+      return jsonResponse({ ...note, categories }, 201);
     }
 
     // /notes/:id routes
@@ -161,11 +196,12 @@ serve(async (req) => {
       if (method === "GET") {
         const { data, error } = await supabase
           .from("notes")
-          .select(`*, categories:categories(id, name)`)
+          .select("*")
           .eq("id", noteId)
           .single();
         if (error) throw error;
-        return jsonResponse(data);
+        const categories = await getNoteCategories(noteId);
+        return jsonResponse({ ...data, categories });
       }
 
       if (method === "PUT") {
@@ -179,12 +215,6 @@ serve(async (req) => {
         const title = body.title.trim().slice(0, 255);
         const content = body.content.slice(0, 100_000);
         const categoryIds: unknown = body.categoryIds;
-        if (
-          categoryIds !== undefined &&
-          (!Array.isArray(categoryIds) || categoryIds.some((id) => !isValidUuid(id)))
-        ) {
-          return badRequest("categoryIds must be an array of valid UUIDs");
-        }
 
         const { data: note, error } = await supabase
           .from("notes")
@@ -195,15 +225,11 @@ serve(async (req) => {
         if (error) throw error;
 
         if (Array.isArray(categoryIds)) {
-          await supabase.from("note_categories").delete().eq("note_id", noteId);
-          if (categoryIds.length > 0) {
-            await supabase
-              .from("note_categories")
-              .insert(categoryIds.map((catId: string) => ({ note_id: note.id, category_id: catId })));
-          }
+          await attachCategories(noteId, categoryIds.filter(isValidUuid));
         }
 
-        return jsonResponse(note);
+        const categories = await getNoteCategories(noteId);
+        return jsonResponse({ ...note, categories });
       }
 
       if (method === "DELETE") {
@@ -221,15 +247,22 @@ serve(async (req) => {
     if (archiveMatch && method === "PATCH") {
       const id = archiveMatch[1];
       if (!isValidUuid(id)) return badRequest("invalid note id");
-      const { data: current } = await supabase.from("notes").select("archived").eq("id", id).single();
+      const { data: current, error: fetchError } = await supabase
+        .from("notes")
+        .select("archived")
+        .eq("id", id)
+        .single();
+      if (fetchError || !current) return badRequest("note not found");
+      const newArchived = !current.archived;
       const { data, error } = await supabase
         .from("notes")
-        .update({ archived: !current?.archived })
+        .update({ archived: newArchived })
         .eq("id", id)
         .select()
         .single();
       if (error) throw error;
-      return jsonResponse(data);
+      const categories = await getNoteCategories(id);
+      return jsonResponse({ ...data, categories });
     }
 
     // PATCH /notes/:id/restore
@@ -244,7 +277,8 @@ serve(async (req) => {
         .select()
         .single();
       if (error) throw error;
-      return jsonResponse(data);
+      const categories = await getNoteCategories(id);
+      return jsonResponse({ ...data, categories });
     }
 
     // DELETE /notes/:id/permanent
@@ -252,6 +286,7 @@ serve(async (req) => {
     if (permanentMatch && method === "DELETE") {
       const id = permanentMatch[1];
       if (!isValidUuid(id)) return badRequest("invalid note id");
+      await supabase.from("note_categories").delete().eq("note_id", id);
       const { error } = await supabase.from("notes").delete().eq("id", id);
       if (error) throw error;
       return new Response(null, { status: 204, headers: corsHeaders });
@@ -263,38 +298,35 @@ serve(async (req) => {
       const [, noteId, catId] = noteCatMatch;
       if (!isValidUuid(noteId) || !isValidUuid(catId)) return badRequest("invalid id");
 
-      if (method === "POST") {
-        const { error } = await supabase
-          .from("note_categories")
-          .insert({ note_id: noteId, category_id: catId });
-        if (error) throw error;
-        const { data } = await supabase
-          .from("notes")
-          .select(`*, categories:categories(id, name)`)
-          .eq("id", noteId)
-          .single();
-        return jsonResponse(data);
-      }
+       if (method === "POST") {
+         const { error } = await supabase
+           .from("note_categories")
+           .insert({ note_id: noteId, category_id: catId });
+         if (error) throw error;
+       }
 
-      if (method === "DELETE") {
-        const { error } = await supabase
-          .from("note_categories")
-          .delete()
-          .eq("note_id", noteId)
-          .eq("category_id", catId);
-        if (error) throw error;
-        const { data } = await supabase
-          .from("notes")
-          .select(`*, categories:categories(id, name)`)
-          .eq("id", noteId)
-          .single();
-        return jsonResponse(data);
-      }
+       if (method === "DELETE") {
+         const { error } = await supabase
+           .from("note_categories")
+           .delete()
+           .eq("note_id", noteId)
+           .eq("category_id", catId);
+         if (error) throw error;
+       }
+
+      const { data: note } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("id", noteId)
+        .single();
+      const categories = await getNoteCategories(noteId);
+      return jsonResponse({ ...note, categories });
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders });
   } catch (error) {
     console.error("[notes-api]", error);
-    return serverError();
+    const errMsg = error instanceof Error ? error.message : JSON.stringify(error);
+    return jsonResponse({ error: "Server error", details: errMsg }, 500);
   }
 });
