@@ -63,7 +63,7 @@ serve(async (req) => {
     if (path === "/categories" && method === "GET") {
       const { data, error } = await supabase.from("categories").select("*");
       if (error) throw error;
-      return jsonResponse(data);
+      return jsonResponse(data ?? []);
     }
 
     // POST /categories
