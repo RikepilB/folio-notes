@@ -14,7 +14,7 @@ export function getNotes(
   sortBy?: string,
   order?: string,
 ): Promise<Note[]> {
-  return api.get<Note[]>('/notes', { params: { archived, deleted, search, categoryId, sortBy, order } }).then((r) => r.data);
+  return api.get<Note[]>('/notes', { params: { archived, deleted, search, categoryId, sortBy, order } }).then((r) => Array.isArray(r.data) ? r.data : []);
 }
 
 export function createNote(payload: CreateNotePayload): Promise<Note> {
@@ -42,7 +42,7 @@ export function hardDeleteNote(id: string): Promise<void> {
 }
 
 export function getCategories(): Promise<Category[]> {
-  return api.get<Category[]>('/categories').then((r) => r.data);
+  return api.get<Category[]>('/categories').then((r) => Array.isArray(r.data) ? r.data : []);
 }
 
 export function createCategory(name: string): Promise<Category> {
