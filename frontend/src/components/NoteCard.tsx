@@ -17,12 +17,12 @@ function truncate(text: string): string {
 const baseBtn: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  padding: '2px 8px',
+  padding: '3px 9px',
   borderRadius: '6px',
-  border: '0.5px solid var(--border)',
+  border: '0.5px solid var(--border2)',
   background: 'transparent',
   color: 'var(--text-muted)',
-  fontSize: 'var(--text-xs)',
+  fontSize: 'var(--text-base)',
   fontFamily: 'var(--font-body)',
   cursor: 'pointer',
   transition: 'color 150ms ease-out, border-color 150ms ease-out, background 150ms ease-out',
@@ -54,9 +54,9 @@ export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): Re
       }}
     >
       {/* Category pills */}
-      {note.categories.length > 0 && (
+      {(note.categories ?? []).length > 0 && (
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-          {note.categories.map((cat) => (
+          {(note.categories ?? []).map((cat) => (
             <span
               key={cat.id}
               style={{
@@ -124,7 +124,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): Re
           style={{
             display: 'flex',
             gap: '4px',
-            opacity: cardHovered ? 1 : 0,
+            opacity: cardHovered ? 1 : 0.35,
             transition: 'opacity 150ms ease-out',
           }}
         >
@@ -136,7 +136,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): Re
             style={{
               ...baseBtn,
               color: hoveredBtn === 'edit' ? 'var(--text-primary)' : 'var(--text-muted)',
-              borderColor: hoveredBtn === 'edit' ? 'var(--border2)' : 'var(--border)',
+              borderColor: hoveredBtn === 'edit' ? 'var(--brand-violet)' : 'var(--border2)',
             }}
           >
             Edit
@@ -150,7 +150,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): Re
             style={{
               ...baseBtn,
               color: hoveredBtn === archiveBtnId ? archiveHoverColor : 'var(--text-muted)',
-              borderColor: hoveredBtn === archiveBtnId ? archiveHoverColor : 'var(--border)',
+              borderColor: hoveredBtn === archiveBtnId ? archiveHoverColor : 'var(--border2)',
             }}
           >
             {archiveLabel}
@@ -164,7 +164,7 @@ export function NoteCard({ note, onEdit, onDelete, onToggleArchive }: Props): Re
             style={{
               ...baseBtn,
               color: hoveredBtn === 'delete' ? 'var(--error)' : 'var(--text-muted)',
-              borderColor: hoveredBtn === 'delete' ? 'var(--error)' : 'var(--border)',
+              borderColor: hoveredBtn === 'delete' ? 'var(--error)' : 'var(--border2)',
             }}
           >
             Delete
