@@ -125,10 +125,10 @@ export function TopBar({ onSearch, onNewNote, sortOrder, onSortChange }: TopBarP
           height: '30px',
           padding: '0 10px',
           borderRadius: '6px',
-          border: '0.5px solid var(--border)',
-          background: 'transparent',
-          color: sortOrder === 'DESC' ? 'var(--brand-violet)' : 'var(--text-muted)',
-          fontSize: 'var(--text-xs)',
+          border: sortOrder === 'DESC' ? '0.5px solid var(--brand-violet)' : '0.5px solid var(--border2)',
+          background: sortOrder === 'DESC' ? 'rgba(95,68,197,0.18)' : 'transparent',
+          color: 'var(--text-primary)',
+          fontSize: 'var(--text-sm)',
           fontFamily: 'var(--font-body)',
           cursor: 'pointer',
           flexShrink: 0,
@@ -137,8 +137,8 @@ export function TopBar({ onSearch, onNewNote, sortOrder, onSortChange }: TopBarP
           gap: '4px',
           transition: 'all 150ms ease-out',
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--border2)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--brand-violet)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = sortOrder === 'DESC' ? 'var(--brand-violet)' : 'var(--border2)'; }}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           {sortOrder === 'DESC' ? (
