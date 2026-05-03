@@ -24,7 +24,7 @@ function deriveCategories(notes: Note[]): Category[] {
   const seen = new Set<string>();
   const cats: Category[] = [];
   for (const note of notes) {
-    for (const cat of note.categories) {
+    for (const cat of (note.categories ?? [])) {
       if (!seen.has(cat.id)) {
         seen.add(cat.id);
         cats.push(cat);
@@ -155,6 +155,11 @@ export default function App(): React.ReactElement {
             flex: 1,
             overflowY: 'auto',
             padding: '24px',
+            background: [
+              'radial-gradient(ellipse 90% 45% at 50% 0%, rgba(62,21,68,0.65) 0%, transparent 65%)',
+              'radial-gradient(ellipse 50% 30% at 15% 80%, rgba(95,68,197,0.12) 0%, transparent 60%)',
+              'var(--page-bg)',
+            ].join(', '),
           }}
         >
           <h1

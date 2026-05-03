@@ -89,7 +89,7 @@ export function NoteForm({ note, onClose, onSave }: NoteFormProps): React.ReactE
     setSubmitError(null);
     try {
       const existingCategories = await getCategories();
-      const existingIds = new Set(existingCategories.map((c) => c.name.toLowerCase()));
+      const existingIds = new Set((existingCategories ?? []).map((c) => c.name.toLowerCase()));
 
       const newCategories = categories.filter((c) => c.id.startsWith('temp-'));
       const existingCatIds = categories
