@@ -110,8 +110,6 @@ serve(async (req) => {
 
       const notesWithCategories = notes ?? [];
 
-      let enriched: Array<Record<string, unknown>> = notesWithCategories;
-
       if (notesWithCategories.length > 0) {
         const noteIds = notesWithCategories.map(n => n.id);
         const { data: links } = await supabase
@@ -129,21 +127,22 @@ serve(async (req) => {
         const catMap = Object.groupBy(cats, c => c.id);
         const linkMap = Object.groupBy(links ?? [], l => l.note_id);
 
-        enriched = notesWithCategories.map(note => ({
+        const enriched = notesWithCategories.map(note => ({
           ...note,
           categories: (linkMap[note.id] ?? [])
             .map(l => catMap[l.category_id]?.[0])
             .filter(Boolean)
         }));
+
+        if (categoryId) {
+          return jsonResponse(enriched.filter((n) =>
+            n.categories.some((c: { id: string }) => c.id === categoryId)
+          ));
+        }
+        return jsonResponse(enriched);
       }
 
-      const filtered = categoryId
-        ? enriched.filter((n: any) =>
-            (n.categories ?? []).some((c: any) => c.id === categoryId)
-          )
-        : enriched;
-
-      return jsonResponse(filtered);
+      return jsonResponse(notesWithCategories.map(n => ({ ...n, categories: [] })));
     }
 
     // DELETE /notes/trash
