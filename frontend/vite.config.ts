@@ -7,4 +7,9 @@ export default defineConfig({
     port: 5173,
     host: true,
   },
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(
+      process.env.VITE_API_URL || 'https://ffitssrosgkrzgjozscc.supabase.co/functions/v1/notes-api'
+    ),
+  },
 });
